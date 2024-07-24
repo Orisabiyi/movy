@@ -1,41 +1,174 @@
-from sqlalchemy import Column, Index, Integer, String, Boolean, Text, Date, DateTime, func
-from main.database import Base, DB
+from main.database import DB, Base
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Table,
+    Text,
+    func,
+)
+from sqlalchemy.orm import relationship
 
+# Association table for many-to-many relationship between movies and cast
+movie_cast = Table(
+    "movie_cast",
+    Base.metadata,
+    Column("movie_id", ForeignKey("movies.id")),
+    Column("cast_id", ForeignKey("casts.id")),
+)
+
+# Association table for many-to-many relationship between movies and genre
+movie_genre_association = Table(
+    "movie_genre",
+    Base.metadata,
+    Column("movie_id", Integer, ForeignKey("movies.id")),
+    Column("genre_id", Integer, ForeignKey("genres.id")),
+)
+
+# Association table for many-to-many relationship between production company and movie
+movie_production_company = Table(
+    "movie_production_company",
+    Base.metadata,
+    Column("movie_id", ForeignKey("movies.id")),
+    Column("production_company_id", ForeignKey("production_company.id")),
+)
 
 
 class Movie(Base):
     """
     the movie model creation
     """
-    __tablename__ = 'movies'
+
+    __tablename__ = "movies"
     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    genre = Column(String(10), nullable=False)
-    rating = Column(String(20), nullable=False)
-    language = Column(String(20), nullable=True)
-    poster_image = Column(String())
-    production_company = Column(String(100), nullable=True)
+    poster_image = Column(String(500))
     trailer_link = Column(String(200), nullable=True)
-    duration_in_min = Column(Integer)
-    release_year = Column(Date)
+    duration_in_min = Column(Integer, nullable=True)
+    release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
 
-    __table_args__ = (
-        Index('ix_title', 'title'),
-        Index('ix_release_year', 'release_year'),
-        Index('ix_rating', 'rating'),
-        Index('ix_genre', 'genre'),
-        Index('ix_language', 'language')
+    primary_lang_id = Column(
+        Integer, ForeignKey("language.id"), nullable=False
     )
+    primary_language = relationship("Language", uselist=False, backref="movie")
+
+    movie_product_com = relationship(
+        "ProductionCompany",
+        secondary=movie_production_company,
+        back_populates="production_com_movie",
+    )
+    movie_casts = relationship(
+        "Cast", secondary=movie_cast, back_populates="casts_movie"
+    )
+    movie_genres = relationship(
+        "Genre",
+        secondary=movie_genre_association,
+        back_populates="genre_movies",
+    )
+
+    __table_args__ = (
+        Index("ix_title", "title"),
+        Index("ix_release_date", "release_date"),
+    )
+
+    def __str__(self):
+        return self.title
 
 
 class Cast(Base):
-    __tablename__ = 'casts'
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(50))
+    """
+    cast model movies
+    """
 
-    __table_args = (
-        Index("ix_name", 'name')
+    __tablename__ = "casts"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    name = Column(String(100))
+
+    __table_args = Index("ix_name", "name")
+
+    casts_movie = relationship(
+        "Movie", secondary=movie_cast, back_populates="movie_casts"
     )
+
+    def __str__(self):
+        return self.name
+
+
+# class MovieRatingReview(Base):
+#     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
+#     review = Column(Text)
+#     rating = Column(Integer)
+#     user_id = Column(Integer, ForeignKey("user.id"))
+#     movie_id = Column(Integer, ForeignKey("movies.id"))
+
+
+# class  MovieSchedule(Base):
+#     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
+#     created_at = Column(DateTime, default=func.now())
+#     updated_at = Column(DateTime)
+#     movie_id = Column(Integer, ForeignKey('movies.id'), nullable=False)
+#     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+#     seat_id = Column(Integer, ForeignKey("seat.id"), nullable=False)
+#     price = Column()
+
+
+# movie metadata
+class Language(Base):
+    __tablename__ = "language"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    primary_lang = Column(String(100))
+
+    __table_args = Index("ix_primary_lang", "lang")
+
+    def __str__(self):
+        return self.primary_lang
+
+
+class Genre(Base):
+    __tablename__ = "genres"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    name = Column(String(100))
+
+    genre_movies = relationship(
+        "Genre",
+        secondary=movie_genre_association,
+        back_populates="movie_genres",
+    )
+    __table_args = Index("ix_genre_name", "name")
+
+    def __str__(self):
+        return self.name
+
+
+class Country(Base):
+    __tablename__ = "country"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    name = Column(String(100))
+
+    __table_args = Index("ix_country", "name")
+
+    def __str__(self):
+        return self.name
+
+
+class ProductionCompany(Base):
+    __tablename__ = "production_company"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    name = Column(String(100))
+    production_com_movies = relationship(
+        "Movie",
+        secondary=movie_production_company,
+        back_populates="movie_production_com",
+    )
+    __table_args = Index("ix_production_company", "name")
+
+    def __str__(self):
+        return self.name
 
