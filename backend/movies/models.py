@@ -58,10 +58,10 @@ class Movie(Base):
     release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
 
-    primary_lang_id = Column(
-        Integer, ForeignKey("language.id"), nullable=False
-    )
-    primary_language = relationship("Language", uselist=False, backref="movie")
+    # primary_lang_id = Column(
+    #     Integer, ForeignKey("language.id"), nullable=True
+    # )
+    # primary_language = relationship("Language", uselist=False, backref="movie")
 
     movie_production_com = relationship(
         "ProductionCompany",
@@ -94,6 +94,15 @@ class Movie(Base):
 #     __tablename__ = "movie_status"
 #     status = Column()
 
+class Gender(Base):
+    __tablename__ = "gender"
+    id = Column(Integer, autoincrement=True, primary_key=True, index=True)
+    name = Column(String(6))
+
+    def __str__(self):
+        return self.name
+
+
 class Cast(Base):
     """
     cast model movies
@@ -101,16 +110,17 @@ class Cast(Base):
 
     __tablename__ = "casts"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(100))
-
-    __table_args = Index("ix_name", "name")
-
+    original_name = Column(String(100))
+    popularity_name = Column(String(100), unique=True)
+    gender_id = Column(Integer, ForeignKey("gender.id"))
     casts_movie = relationship(
         "Movie", secondary=movie_cast, back_populates="movie_casts"
     )
+    # cast_gender = relationship("Gender", backref="gender")
+    __table_args = Index("ix_name", "name")
 
     def __str__(self):
-        return self.name
+        return self.popularity_name
 
 
 # class MovieRatingReview(Base):
@@ -135,7 +145,7 @@ class Cast(Base):
 class Language(Base):
     __tablename__ = "language"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    primary_lang = Column(String(100))
+    lang = Column(String(100))
 
     __table_args = Index("ix_primary_lang", "lang")
 
@@ -146,7 +156,7 @@ class Language(Base):
 class Genre(Base):
     __tablename__ = "genres"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(100))
+    name = Column(String(20))
 
     genre_movies = relationship(
         "Movie",

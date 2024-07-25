@@ -1,8 +1,10 @@
 import os
+from typing import Dict, Union
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from .settings import DATABASE_DICT
 
 DATABASE_URL = (
@@ -27,18 +29,65 @@ class DB:
         Base.metadata.create_all(self._engine)
 
     @property
-    def session(self) -> Session:
+    def _session(self) -> Session:
         """
         create database session for users
         """
-        DBsession = sessionmaker(
-            autocommit=False, autoflush=False, bind=self._engine
-        )
-        self.__session = DBsession()
+        if self.__session is None:
+            DBsession = sessionmaker(
+                autocommit=False, autoflush=False, bind=self._engine
+            )
+            self.__session = DBsession()
         return self.__session
 
     @property
-    def close(self):
+    def _close(self):
         if self.__session:
             self.__session.close()
         self.__session = None
+
+
+    def get_or_add(self, klass, close=True, **kwargs):
+        """
+        check if a value exist if not add too the value
+        """
+        instance = None
+        try:
+            instance = self._session.query(klass).filter_by(**kwargs).one()
+        except (NoResultFound):
+            instance = klass(**kwargs)
+            self._session.add(instance)
+            self._session.commit()
+            self._session.refresh(instance)
+            if close:
+                self._close
+        except MultipleResultsFound:
+            instance = self._session.query(klass).filter_by(**kwargs).first()
+        return instance
+
+    def add(self, klass, close=True, **kwargs):
+        """
+        add to the database db
+        """
+        instance = klass(**kwargs)
+        self._session.add(instance)
+        self._session.commit()
+        self._session.refresh(instance)
+        if close:
+            self._close
+        return instance
+
+    def get(self, klass, **kwargs):
+        """
+        get instance model
+        """
+        try:
+            instance = self._session.query(klass).filter_by(**kwargs).one()
+        except NoResultFound:
+            raise NoResultFound(f"Could not find query object {kwargs.keys()}")
+        except MultipleResultsFound:
+            raise MultipleResultsFound(f"Multiple Results found for get")
+
+        return instance
+
+        

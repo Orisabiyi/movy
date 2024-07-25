@@ -4,13 +4,22 @@ handle fetching of data from TMDB Access token
 """
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import requests
 from dotenv import load_dotenv
 from main.database import DB
 from main.settings import ENV_PATH
-from movies.models import Cast, Country, Genre, Movie
+from movies.models import (
+    Cast,
+    Country,
+    Gender,
+    Genre,
+    Language,
+    Movie,
+    ProductionCompany,
+)
+from sqlalchemy import Tuple
 
 db = DB()
 
@@ -34,6 +43,7 @@ class TMDB:
             "Authorization": f"Bearer {ACCESS_TOKEN}",
         }
         self.param = {"api_key": os.getenv("TMDB_API_KEY")}
+        self._movie_id_lst = []
 
     def get_movie_genre(self):
         url = f"{self._url}genre/movie/list?language=en"
@@ -59,21 +69,16 @@ class TMDB:
         """
         get all movies in tmdb
         """
-        image_base_url = "https://image.tmdb.org/t/p/"
-        movie_id_lst = []
-        page_number = 1
         movie_info = {}
         movie_id_lst = []
         for i in range(1, 5):
-            url = f"{self._url}movie/popular?language=en-US&page={page_number}"
+            url = f"{self._url}movie/popular?language=en-US&page={i}"
             resp = _get_url_response(url, self._headers, self.param)
             movies = resp["results"]
-
             for movie in movies:
-                movie_id_lst.append(movie["id"])
                 trailer_link = self.get_trailer_link(movie["id"])
 
-                movie_detail = self.get_movie_detail(movie['id'])
+                movie_detail = self.get_movie_detail(movie["id"])
                 poster_path = f"https://image.tmdb.org/t/p/original{movie['poster_path']}"
                 backdrop_path = f"https://image.tmdb.org/t/p/original{movie['backdrop_path']}"
                 movie_info = {
@@ -83,9 +88,16 @@ class TMDB:
                     "backdrop_path": backdrop_path,
                     "trailer_link": trailer_link,
                     "release_date": movie["release_date"],
-                    "duration_in_min": movie_detail["runtime"]
+                    "duration_in_min": movie_detail["runtime"],
                 }
-        print(movie_info)
+                movie_obj = db.add(Movie, close=False, **movie_info)
+                movie_id_lst.append((movie["id"], movie_obj.id))
+                self.prod_company(
+                    movie_detail["production_companies"], movie_obj
+                )
+                self.add_genre(movie_detail["genres"], movie_obj)
+        self.movie_id_lst = movie_id_lst
+
     def get_trailer_link(self, movie_id: int) -> Optional[str]:
         """
         get video trailer link by movie_id
@@ -93,7 +105,7 @@ class TMDB:
         url = f"{self._url}movie/{movie_id}/videos?language=en-US"
         resp = _get_url_response(url, self._headers, self.param)
 
-        trailer = resp['results']
+        trailer = resp["results"]
 
         key = None
         for value in trailer:
@@ -113,9 +125,63 @@ class TMDB:
         resp = _get_url_response(url, self._headers, self.param)
         return resp
 
+    def get_language(self):
+        url = f"{self._url}configuration/languages"
+        resp = _get_url_response(url, headers=self._headers, params=self.param)
+
+        for lang in resp:
+            db.add(Language, lang=lang["english_name"])
+
+    def prod_company(
+        self, prod_company: List[Dict[str, Union[str, int]]], movie_obj: Movie
+    ):
+        for company in prod_company:
+            pc = db.get_or_add(
+                ProductionCompany,
+                close=False,
+                name=company["name"],
+            )
+            movie_obj.movie_production_com.append(pc)
+        db._session.commit()
+
+    def add_genre(
+        self, movie_genre: List[Dict[str, Union[str, int]]], movie_obj: Movie
+    ):
+        for genre in movie_genre:
+            gen = db.get_or_add(Genre, close=False, name=genre["name"])
+            movie_obj.movie_genres.append(gen)
+        db._session.commit()
+        db._close
+
+    def movie_cast(self):
+        movie_id_lst = self.movie_id_lst
+        female = db.add(Gender,close=False, name="female")
+        male = db.add(Gender, close=False,name="male")
+        cast = None
+        for movie_id in movie_id_lst:
+            url = f"{self._url}movie/{movie_id[0]}/credits?language=en-US"
+            resp = _get_url_response(url, self._headers, self.param)
+            cast_info = resp["cast"]
+            for cast_d in cast_info:
+                cast_dep = cast_d["known_for_department"]
+                if cast_dep == "Acting":
+                    cast = db.get_or_add(
+                        Cast,
+                        close=False,
+                        original_name=cast_d["original_name"],
+                        popularity_name=cast_d["name"],
+                    )
+                movie_obj = db.get(Movie, id=movie_id[1])
+                if cast:
+                    cast.casts_movie.append(movie_obj)
+        db._session.commit()
+        db._close
+
 if __name__ == "__main__":
     tmdb = TMDB()
     # tmdb.get_movie()
     tmdb.get_movie_genre()
+    tmdb.get_language()
     tmdb.get_country()
     tmdb.get_popular_movies()
+    tmdb.movie_cast()

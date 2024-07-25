@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env_path = os.path.join(BASE_DIR, ".env")
-load_dotenv(dotenv_path=env_path)
+ENV_PATH = os.path.join(BASE_DIR, ".env")
+load_dotenv(dotenv_path=ENV_PATH)
 
 USERNAME = os.getenv("TEST_USERNAME")
 DATABASE = os.getenv("TEST_DATABASE")
