@@ -1,4 +1,4 @@
-Here's a sample `README.md` for your movie ticket booking app setup:
+## MOVY Ticket Booking API setup
 
 ```markdown
 # Movy Ticket Booking App
