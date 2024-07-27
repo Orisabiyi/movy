@@ -1,3 +1,5 @@
+import json
+from math import floor
 from typing import List, Optional, TypeVar
 from urllib.parse import urlencode
 
@@ -10,7 +12,7 @@ from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from fastapi_pagination.links import Page
 from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
-from math import floor
+
 from .database import DB
 
 app = FastAPI()
@@ -75,27 +77,37 @@ def get_all_movies(
     db: DB = Depends(get_db),
     params: CustomParams = Depends(),
 ) -> CustomPage[MovieListSchemas]:
-    movies_query = db._session.query(
-        Movie.id,
-        Movie.title,
-        Movie.tag_line,
-        Movie.poster_path,
-        Movie.release_date,
-        Movie.duration_in_min,
-    ).all()
-    m_list = [
-        MovieListSchemas(
-            **{
-                "id": movie.id,
-                "title": movie.title,
-                "tag_line": movie.tag_line,
-                "run_time": f"{floor(movie.duration_in_min / 60)}hr {movie.duration_in_min % 60}min",
-                "release_date": str(movie.release_date),
-                "poster_path": movie.poster_path
-            }
-        )
-        for movie in movies_query
-    ]
+
+    from main.m_db import REDIS_CLI
+
+    value_set = REDIS_CLI.get("movie_list_value")
+
+    if not value_set:
+        movies_query = db._session.query(
+            Movie.id,
+            Movie.title,
+            Movie.tag_line,
+            Movie.poster_path,
+            Movie.release_date,
+            Movie.duration_in_min,
+        ).all()
+        m_list = [
+            MovieListSchemas(
+                **{
+                    "id": movie.id,
+                    "title": movie.title,
+                    "tag_line": movie.tag_line,
+                    "run_time": f"{floor(movie.duration_in_min / 60)}hr {movie.duration_in_min % 60}min",
+                    "release_date": str(movie.release_date),
+                    "poster_path": movie.poster_path,
+                }
+            )
+            for movie in movies_query
+        ]
+        value_set = REDIS_CLI.set('movie_list_value', json.dumps([movie.model_dump_json() for movie in m_list]))
+    else:
+        value_set = REDIS_CLI.get('movie_list_value').decode('UTF-8')
+        m_list = [MovieListSchemas(**json.loads(movie)) for movie in json.loads(value_set)]
     default_page = paginate(m_list, params)
     custom_page = get_custom_page(default_page, request, params)
 
