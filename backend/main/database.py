@@ -2,9 +2,10 @@ import os
 from typing import Dict, Union
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+
 from .settings import DATABASE_DICT
 
 DATABASE_URL = (
@@ -24,8 +25,8 @@ class DB:
         """
         self._engine = create_engine(DATABASE_URL, echo=False)
         self.__session: Session | None = None
-        if os.getenv("TEST_DB") == "1":
-            Base.metadata.drop_all(self._engine)
+        # if os.getenv("TEST_DB") == "1":
+        #     Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
 
     @property
@@ -88,6 +89,13 @@ class DB:
         except MultipleResultsFound:
             raise MultipleResultsFound(f"Multiple Results found for get")
 
+        return instance
+
+    def list_all(self, klass, **kwargs):
+        """
+        return a list of all object in sql
+        """
+        instance = self._session.query(klass).filter_by(**kwargs)
         return instance
 
         

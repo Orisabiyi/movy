@@ -54,6 +54,7 @@ class Movie(Base):
     poster_path = Column(String(200))
     backdrop_path = Column(String(200))
     trailer_link = Column(String(200), nullable=True)
+    tag_line = Column(Text, nullable=True)
     duration_in_min = Column(Integer, nullable=True)
     release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
@@ -94,13 +95,13 @@ class Movie(Base):
 #     __tablename__ = "movie_status"
 #     status = Column()
 
-class Gender(Base):
-    __tablename__ = "gender"
-    id = Column(Integer, autoincrement=True, primary_key=True, index=True)
-    name = Column(String(6))
+# class Gender(Base):
+#     __tablename__ = "gender"
+#     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
+#     name = Column(String(6))
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
 class Cast(Base):
@@ -112,7 +113,7 @@ class Cast(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     original_name = Column(String(100))
     popularity_name = Column(String(100), unique=True)
-    gender_id = Column(Integer, ForeignKey("gender.id"))
+    # gender_id = Column(Integer, ForeignKey("gender.id"))
     casts_movie = relationship(
         "Movie", secondary=movie_cast, back_populates="movie_casts"
     )
@@ -150,7 +151,7 @@ class Language(Base):
     __table_args = Index("ix_primary_lang", "lang")
 
     def __str__(self):
-        return self.primary_lang
+        return self.lang
 
 
 class Genre(Base):
@@ -169,34 +170,34 @@ class Genre(Base):
         return self.name
 
 
-class MovieCertificationEnum(enum.Enum):
-    NotRated = "NR"
-    General = "G"
-    PG = "PG"
-    PG_13 = "PG-13"
-    R = "R"
+# class MovieCertificationEnum(enum.Enum):
+#     NotRated = "NR"
+#     General = "G"
+#     PG = "PG"
+#     PG_13 = "PG-13"
+#     R = "R"
 
-    @classmethod
-    def get_description(cls, certification):
-        descriptions = {
-            cls.NotRated: "Not rated",
-            cls.General: "General",
-            cls.PG: "Parental Guidance",
-            cls.PG_13: "Parents Strongly Cautioned 13+",
-            cls.R: "Restricted 18+",
-        }
-        return descriptions.get(certification, "Unknown rating")
+#     @classmethod
+#     def get_description(cls, certification):
+#         descriptions = {
+#             cls.NotRated: "Not rated",
+#             cls.General: "General",
+#             cls.PG: "Parental Guidance",
+#             cls.PG_13: "Parents Strongly Cautioned 13+",
+#             cls.R: "Restricted 18+",
+#         }
+#         return descriptions.get(certification, "Unknown rating")
 
 
-class MovieCertification(Base):
-    __tablename__ = "certification"
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    cert = Column(
-        Enum(MovieCertificationEnum), default=MovieCertificationEnum.NotRated
-    )
+# class MovieCertification(Base):
+#     __tablename__ = "certification"
+#     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+#     cert = Column(
+#         Enum(MovieCertificationEnum), default=MovieCertificationEnum.NotRated
+#     )
 
-    def __str__(self):
-        return self.cert
+#     def __str__(self):
+#         return self.cert
 
 
 class Country(Base):

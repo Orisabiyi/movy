@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-handle fetching of data from TMDB Access token
+handle fetching of data from TMDB database using its API
 """
 import json
 import os
@@ -13,7 +13,7 @@ from main.settings import ENV_PATH
 from movies.models import (
     Cast,
     Country,
-    Gender,
+    # Gender,
     Genre,
     Language,
     Movie,
@@ -89,6 +89,7 @@ class TMDB:
                     "trailer_link": trailer_link,
                     "release_date": movie["release_date"],
                     "duration_in_min": movie_detail["runtime"],
+                    "tag_line": movie_detail["tagline"]
                 }
                 movie_obj = db.add(Movie, close=False, **movie_info)
                 movie_id_lst.append((movie["id"], movie_obj.id))
@@ -155,8 +156,6 @@ class TMDB:
 
     def movie_cast(self):
         movie_id_lst = self.movie_id_lst
-        female = db.add(Gender,close=False, name="female")
-        male = db.add(Gender, close=False,name="male")
         cast = None
         for movie_id in movie_id_lst:
             url = f"{self._url}movie/{movie_id[0]}/credits?language=en-US"
