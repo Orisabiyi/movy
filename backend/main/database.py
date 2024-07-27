@@ -1,0 +1,101 @@
+import os
+from typing import Dict, Union
+
+from sqlalchemy import create_engine
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
+
+from .settings import DATABASE_DICT
+
+DATABASE_URL = (
+    f'mysql+pymysql://{DATABASE_DICT["USERNAME"]}:'
+    + f'{DATABASE_DICT["PASSWORD"]}@{DATABASE_DICT["HOST"]}:'
+    + f'{DATABASE_DICT["PORT"]}/{DATABASE_DICT["DATABASE"]}'
+)
+
+Base = declarative_base()
+
+
+class DB:
+    def __init__(self):
+        from movies.models import Movie
+        """
+        initalite sql engine and session for sql
+        """
+        self._engine = create_engine(DATABASE_URL, echo=False)
+        self.__session: Session | None = None
+        # if os.getenv("TEST_DB") == "1":
+        #     Base.metadata.drop_all(self._engine)
+        Base.metadata.create_all(self._engine)
+
+    @property
+    def _session(self) -> Session:
+        """
+        create database session for users
+        """
+        if self.__session is None:
+            DBsession = sessionmaker(
+                autocommit=False, autoflush=False, bind=self._engine
+            )
+            self.__session = DBsession()
+        return self.__session
+
+    @property
+    def _close(self):
+        if self.__session:
+            self.__session.close()
+        self.__session = None
+
+
+    def get_or_add(self, klass, close=True, **kwargs):
+        """
+        check if a value exist if not add too the value
+        """
+        instance = None
+        try:
+            instance = self._session.query(klass).filter_by(**kwargs).one()
+        except (NoResultFound):
+            instance = klass(**kwargs)
+            self._session.add(instance)
+            self._session.commit()
+            self._session.refresh(instance)
+            if close:
+                self._close
+        except MultipleResultsFound:
+            instance = self._session.query(klass).filter_by(**kwargs).first()
+        return instance
+
+    def add(self, klass, close=True, **kwargs):
+        """
+        add to the database db
+        """
+        instance = klass(**kwargs)
+        self._session.add(instance)
+        self._session.commit()
+        self._session.refresh(instance)
+        if close:
+            self._close
+        return instance
+
+    def get(self, klass, **kwargs):
+        """
+        get instance model
+        """
+        try:
+            instance = self._session.query(klass).filter_by(**kwargs).one()
+        except NoResultFound:
+            raise NoResultFound(f"Could not find query object {kwargs.keys()}")
+        except MultipleResultsFound:
+            raise MultipleResultsFound(f"Multiple Results found for get")
+
+        return instance
+
+    def list_all(self, klass, **kwargs):
+        """
+        return a list of all object in sql
+        """
+        instance = self._session.query(klass).filter_by(**kwargs)
+        return instance
+
+        
