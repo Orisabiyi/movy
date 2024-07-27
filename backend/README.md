@@ -21,8 +21,9 @@ cd movy-ticket-booking-app
 
 ### Create and Activate Virtual Environment
 ```sh
-python -m venv venv
+python -m venv env
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+# created virtuale env is not name env or venv please manually add to the .gitignore file
 ```
 
 ### Install Dependencies
