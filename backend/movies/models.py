@@ -111,6 +111,7 @@ class Movie(Base):
                 for cast in dct["movie_casts"]
             ][:10],
         }
+        print(dct)
         return dct
 
 

@@ -170,7 +170,7 @@ class TMDB:
                     cast = db.get_or_add(
                         Cast,
                         close=False,
-                        name=cast_d["original_name"],
+                        name=cast_d["name"],
                         profile_path=profile_path,
                         popularity=cast_d['popularity']
                     )

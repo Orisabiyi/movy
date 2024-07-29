@@ -42,7 +42,7 @@ class MovieDetailSchema(BaseModel):
     tag_line: str
     runtime: str
     release_date: str
-    trailer_link: str
+    trailer_link: Optional[str] = None
     poster_path: str
     backdrop_path: str
     genres: List[str]
