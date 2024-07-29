@@ -21,7 +21,7 @@ class DB:
     def __init__(self):
         from movies.models import Movie
         """
-        initalite sql engine and session for sql
+        initalize sql engine and session for sql
         """
         self._engine = create_engine(DATABASE_URL, echo=False)
         self.__session: Session | None = None
@@ -99,3 +99,10 @@ class DB:
         return instance
 
         
+
+def get_db():
+    db = DB()
+    try:
+        yield db
+    finally:
+        db._close
