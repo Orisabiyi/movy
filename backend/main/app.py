@@ -106,6 +106,8 @@ def get_all_movies(
 
 add_pagination(app)
 
-from movies import views
+from movies import movie_routes
+from users import user_routes
 
-app.include_router(views.router)
+app.include_router(movie_routes.router)
+app.include_router(user_routes.router)
