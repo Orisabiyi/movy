@@ -10,8 +10,8 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     password = Column(String(500), nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=created_at)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
     is_verified = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
 

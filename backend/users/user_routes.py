@@ -21,6 +21,9 @@ def signup(data: SignUpUserSchema, db: DB = Depends(get_db)):
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
         )
+
+
+    #TODO send user verification email
     return JSONResponse(
         content={"message": "User created successfully"},
         status_code=status.HTTP_201_CREATED,
