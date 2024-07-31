@@ -30,13 +30,13 @@ def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
     return JSONResponse(content=data, status_code=200)
 
 
-@router.get('/upcoming-movies')
-def get_upcoming_movies(db: DB = Depends(get_db)):
-    #TODO implement the get movie endpoint
-    ...
+# @router.get('/upcoming-movies')
+# def get_upcoming_movies(db: DB = Depends(get_db)):
+#     #TODO implement the get movie endpoint
+#     ...
 
 
-@router.get("/search")
-def movie_search():
-    #TODO implement movie search with diffferent param
-    ...
+# @router.get("/search")
+# def movie_search():
+#     #TODO implement movie search with diffferent param
+#     ...
