@@ -6,7 +6,7 @@ from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
-from .settings import DATABASE_DICT
+from .settings import DATABASE_DICT, BASE_DIR
 
 DATABASE_URL = (
     f'mysql+pymysql://{DATABASE_DICT["USERNAME"]}:'
@@ -16,6 +16,12 @@ DATABASE_URL = (
 
 Base = declarative_base()
 
+ssl_args = {
+    'ssl': {
+        'sslmode': 'REQUIRED',
+        'ca': BASE_DIR / "main" / "ca.pem" # Replace '/path/to/ca-cert.pem' with the actual path to your CA cert file
+    }
+}
 
 class DB:
     def __init__(self):
@@ -23,9 +29,9 @@ class DB:
         """
         initalize sql engine and session for sql
         """
-        self._engine = create_engine(DATABASE_URL, echo=False)
+        self._engine = create_engine(DATABASE_URL, echo=False, connect_args=ssl_args)
         self.__session: Session | None = None
-        # if os.getenv("TEST_DB") == "1":
+        # if os.getenv("TEST_DB") != "1":
         #     Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
 

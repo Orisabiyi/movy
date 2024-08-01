@@ -71,7 +71,7 @@ class TMDB:
         """
         movie_info = {}
         movie_id_lst = []
-        for i in range(1, 5):
+        for i in range(1, 8):
             url = f"{self._url}movie/popular?language=en-US&page={i}"
             resp = _get_url_response(url, self._headers, self.param)
             movies = resp["results"]

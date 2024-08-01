@@ -22,6 +22,7 @@ from sqlalchemy.orm import relationship
 movie_cast = Table(
     "movie_cast",
     Base.metadata,
+    Column("id", Integer, autoincrement=True, primary_key=True),
     Column("movie_id", ForeignKey("movies.id")),
     Column("cast_id", ForeignKey("casts.id")),
 )
@@ -30,6 +31,7 @@ movie_cast = Table(
 movie_genre_association = Table(
     "movie_genre",
     Base.metadata,
+    Column("id", Integer, autoincrement=True, primary_key=True),
     Column("movie_id", Integer, ForeignKey("movies.id")),
     Column("genre_id", Integer, ForeignKey("genres.id")),
 )
@@ -38,6 +40,7 @@ movie_genre_association = Table(
 movie_production_company = Table(
     "movie_production_company",
     Base.metadata,
+    Column("id", Integer, autoincrement=True, primary_key=True),
     Column("movie_id", ForeignKey("movies.id")),
     Column("production_company_id", ForeignKey("production_company.id")),
 )
