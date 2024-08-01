@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -86,6 +87,34 @@ class Movie(Base):
     def __str__(self):
         return self.title
 
+    @property
+    def get_path(self):
+        return f'/movies/{self.id}'
+
+    def movie_to_dict(self):
+        dct = self.__dict__
+        del dct["_sa_instance_state"]
+        del dct["uploaded_at"]
+        dct = {
+            "id": dct["id"],
+            "title": dct["title"],
+            "description": dct["description"],
+            "poster_path": dct["poster_path"],
+            "backdrop_path": dct["backdrop_path"],
+            "tag_line": dct["tag_line"],
+            "trailer_link": dct["trailer_link"],
+            "runtime": f"{dct['duration_in_min']// 60}hr {dct['duration_in_min'] % 60}min",
+            "release_date": str(dct["release_date"]),
+            "genres": [genre.name for genre in dct["movie_genres"]],
+            "starring": [
+                {"name": cast.name, "profile_path": cast.profile_path}
+                for cast in dct["movie_casts"]
+            ][:10],
+        }
+        print(dct)
+        return dct
+
+
 # class MovieStatusEnum(enum.Enum):
 #     RELEASED= 'Released'
 #     UPCOMING = 'Upcoming'
@@ -111,8 +140,9 @@ class Cast(Base):
 
     __tablename__ = "casts"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    original_name = Column(String(100))
-    popularity_name = Column(String(100), unique=True)
+    name = Column(String(100))
+    profile_path = Column(String(100), nullable=True)
+    popularity = Column(Float)
     # gender_id = Column(Integer, ForeignKey("gender.id"))
     casts_movie = relationship(
         "Movie", secondary=movie_cast, back_populates="movie_casts"
@@ -121,7 +151,7 @@ class Cast(Base):
     __table_args = Index("ix_name", "name")
 
     def __str__(self):
-        return self.popularity_name
+        return self.name
 
 
 # class MovieRatingReview(Base):

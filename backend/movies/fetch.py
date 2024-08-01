@@ -164,11 +164,15 @@ class TMDB:
             for cast_d in cast_info:
                 cast_dep = cast_d["known_for_department"]
                 if cast_dep == "Acting":
+                    profile_path = None
+                    if cast_d["profile_path"]:
+                        profile_path = f"https://image.tmdb.org/t/p/original{cast_d['profile_path']}"
                     cast = db.get_or_add(
                         Cast,
                         close=False,
-                        original_name=cast_d["original_name"],
-                        popularity_name=cast_d["name"],
+                        name=cast_d["name"],
+                        profile_path=profile_path,
+                        popularity=cast_d['popularity']
                     )
                 movie_obj = db.get(Movie, id=movie_id[1])
                 if cast:
