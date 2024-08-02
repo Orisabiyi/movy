@@ -6,7 +6,7 @@ from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
-from .settings import DATABASE_DICT, BASE_DIR
+from .settings import BASE_DIR, DATABASE_DICT
 
 DATABASE_URL = (
     f'mysql+pymysql://{DATABASE_DICT["USERNAME"]}:'
@@ -17,19 +17,28 @@ DATABASE_URL = (
 Base = declarative_base()
 
 ssl_args = {
-    'ssl': {
-        'sslmode': 'REQUIRED',
-        'ca': BASE_DIR / "main" / "ca.pem" # Replace '/path/to/ca-cert.pem' with the actual path to your CA cert file
+    "ssl": {
+        "sslmode": "REQUIRED",
+        "ca": BASE_DIR
+        / "main"
+        / "ca.pem",  # Replace '/path/to/ca-cert.pem' with the actual path to your CA cert file
     }
 }
+
 
 class DB:
     def __init__(self):
         from movies.models import Movie
+
         """
         initalize sql engine and session for sql
         """
-        self._engine = create_engine(DATABASE_URL, echo=False, connect_args=ssl_args)
+        if os.getenv("TEST_DB") == "1":
+            self._engine = create_engine(DATABASE_URL, echo=False)
+        else:
+            self._engine = create_engine(
+                DATABASE_URL, echo=False, connect_args=ssl_args
+            )
         self.__session: Session | None = None
         # if os.getenv("TEST_DB") != "1":
         #     Base.metadata.drop_all(self._engine)
@@ -53,7 +62,6 @@ class DB:
             self.__session.close()
         self.__session = None
 
-
     def get_or_add(self, klass, close=True, **kwargs):
         """
         check if a value exist if not add too the value
@@ -61,7 +69,7 @@ class DB:
         instance = None
         try:
             instance = self._session.query(klass).filter_by(**kwargs).one()
-        except (NoResultFound):
+        except NoResultFound:
             instance = klass(**kwargs)
             self._session.add(instance)
             self._session.commit()
@@ -104,7 +112,6 @@ class DB:
         instance = self._session.query(klass).filter_by(**kwargs)
         return instance
 
-        
 
 def get_db():
     db = DB()

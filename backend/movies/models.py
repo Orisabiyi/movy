@@ -92,7 +92,7 @@ class Movie(Base):
 
     @property
     def get_path(self):
-        return f'/movies/{self.id}'
+        return f'movies/{self.id}'
 
     def movie_to_dict(self):
         dct = self.__dict__

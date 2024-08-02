@@ -83,7 +83,6 @@ def get_all_movies(
 ) -> CustomPage[MovieListSchemas]:
 
     from main.m_db import REDIS_CLI
-
     value_set = REDIS_CLI.get("movie_list_value")
 
     # add the data for caching
@@ -100,7 +99,7 @@ def get_all_movies(
                     "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",
                     "release_date": str(movie.release_date),
                     "poster_path": movie.poster_path,
-                    "url": movie.get_path,
+                    "url": f"{request.base_url}{movie.get_path}",
                 }
             )
             for movie in movies_query

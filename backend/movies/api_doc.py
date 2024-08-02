@@ -62,23 +62,69 @@ movie_detail_response = {
                     "backdrop_path": "https://image.tmdb.org/t/p/original/9l1eZiJHmhr5jIlthMdJN5WYoff.jpg",
                     "genres": ["Action", "Science Fiction", "Comedy"],
                     "starring": [
-                        {"name": "Ryan Reynolds", "profile_path": "https://image.tmdb.org/t/p/original/2Orm6l3z3zukF1q0AgIOUqvwLeB.jpg"},
-                        {"name": "Hugh Jackman", "profile_path": "https://image.tmdb.org/t/p/original/oX6CpXmnXCHLyqsa4NEed1DZAKx.jpg"},
-                        {"name": "Emma Corrin", "profile_path": "https://image.tmdb.org/t/p/original/w4gFlPOqdSMRSH1dsuqQMKCGBWg.jpg"}
+                        {
+                            "name": "Ryan Reynolds",
+                            "profile_path": "https://image.tmdb.org/t/p/original/2Orm6l3z3zukF1q0AgIOUqvwLeB.jpg",
+                        },
+                        {
+                            "name": "Hugh Jackman",
+                            "profile_path": "https://image.tmdb.org/t/p/original/oX6CpXmnXCHLyqsa4NEed1DZAKx.jpg",
+                        },
+                        {
+                            "name": "Emma Corrin",
+                            "profile_path": "https://image.tmdb.org/t/p/original/w4gFlPOqdSMRSH1dsuqQMKCGBWg.jpg",
+                        },
                     ],
-                    "more_actors": "and more..."
+                    "more_actors": "and more...",
                 }
             }
-        }
+        },
     },
     404: {
         "description": "Movie not found",
         "content": {
             "application/json": {
-                "example": {
-                    "message": "Movie with this id not found"
-                }
+                "example": {"message": "Movie with this id not found"}
             }
-        }
-    }
+        },
+    },
+}
+
+
+movie_search = {
+    200: {
+        "description": "Successful Response",
+        "content": {
+            "application/json": {
+                "example": [
+                    {
+                        "id": 10,
+                        "title": "Deadpool",
+                        "tagline": "Feel the love.",
+                        "runtime": "1hr 48min",
+                        "release_date": "2016-02-09",
+                        "poster_path": "https://image.tmdb.org/t/p/original/3E53WEZJqP6aM84D8CckXx4pIHw.jpg",
+                        "url": "http://127.0.0.1:8000/movies/10",
+                    },
+                    {
+                        "id": 27,
+                        "title": "Once Upon a Deadpool",
+                        "tagline": "Yule believe in miracles.",
+                        "runtime": "1hr 58min",
+                        "release_date": "2018-12-11",
+                        "poster_path": "https://image.tmdb.org/t/p/original/5Ka49BWWyKMXr93YMbH5wLN7aAM.jpg",
+                        "url": "http://127.0.0.1:8000/movies/27",
+                    },
+                ]
+            }
+        },
+    },
+    404: {
+        "description": "Unsuccessful Response",
+        "content": {
+            "application/json": {
+                "example": {"message": "Movie with moom not found"}
+            }
+        },
+    },
 }

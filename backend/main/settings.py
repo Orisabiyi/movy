@@ -13,6 +13,7 @@ if os.getenv("TEST_DB") == "1":
     DATABASE = os.getenv("TEST_DATABASE")
     HOST = os.getenv("TEST_HOST")
     PASSWORD = os.getenv("TEST_PASSWORD")
+    PORT =  3306
 
 else:
     USERNAME = os.getenv("USERNAME")
@@ -20,7 +21,7 @@ else:
     HOST = os.getenv("DATABASE_HOST")
     PASSWORD = os.getenv("DATABASE_PASSWORD")
 
-PORT = int(os.getenv("PORT", 3306))
+    PORT = int(os.getenv("PORT", 3306))
 
 
 DATABASE_DICT = {

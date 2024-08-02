@@ -6,7 +6,7 @@ from main.settings import ENV_PATH, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT
 
 load_dotenv(dotenv_path=ENV_PATH)
 
-REDIS_CLI = redis.StrictRedis(
+REDIS_CLI = redis.Redis(
     # host=REDIS_HOST,
     # port=REDIS_PORT,
     # password='',
