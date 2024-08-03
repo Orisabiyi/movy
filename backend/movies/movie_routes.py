@@ -2,7 +2,7 @@ from typing import List
 
 import requests
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Request, params
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from main.database import DB, get_db
 from movies.models import Cast, Genre, Movie, ProductionCompany
@@ -48,7 +48,14 @@ def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
     response_model=List[MovieListSchemas],
     responses=movie_search,
 )
-def search_movies(request: Request, query: str, db: DB = Depends(get_db)):
+def search_movies(
+    request: Request,
+    query: str = Query(
+        ...,
+        description="the search query to match movie titles and descriptions",
+    ),
+    db: DB = Depends(get_db),
+):
     """
     perform search on movie by title
     """
@@ -58,7 +65,10 @@ def search_movies(request: Request, query: str, db: DB = Depends(get_db)):
     results = db._session.execute(search_query, {"query": query}).fetchall()
     if not results:
         return JSONResponse(
-            content={"message": f"Movie with query {query} not found"},
+            content={
+                "message": f"Movie with query {query} not found",
+                "status_code": 404,
+            },
             status_code=404,
         )
 
@@ -86,16 +96,15 @@ def search_movies(request: Request, query: str, db: DB = Depends(get_db)):
 #     ...
 
 
-@router.get('/genres/')
+@router.get("/genres/")
 def get_movie_list_genres():
     ...
-    #TODO return a list of genrers
+    # TODO return a list of genrers
 
 
+# TODO filter by genrers
 
-#TODO filter by genrers
-
-#TODO filter by date    
+# TODO filter by date
 
 
-#TODO Movie Schedule
+# TODO Movie Schedule

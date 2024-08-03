@@ -51,3 +51,8 @@ class MovieDetailSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class GenreList(BaseModel):
+    id: int
+    name: str

@@ -1,14 +1,16 @@
-from passlib.hash import argon2
-from main.database import DB
-from .models import User
 from fastapi.exceptions import HTTPException
+from main.database import DB
+from passlib.hash import argon2
 from sqlalchemy.exc import NoResultFound
+
+from .models import User
+
+
 def _hash_password(password: str):
     return argon2.hash(password)
 
 def _verify_hash_password(password: str, hashed_password: str):
     return argon2.verify(password, hashed_password)
-
 
 
 

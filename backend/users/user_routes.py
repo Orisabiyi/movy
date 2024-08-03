@@ -5,7 +5,7 @@ from main.database import DB, get_db
 from .auth import Auth
 from .schemas import SignUpSuccessfulResponseModel, SignUpUserSchema
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["User auth"])
 
 AUTH = Auth()
 
@@ -15,18 +15,30 @@ AUTH = Auth()
 )
 def signup(data: SignUpUserSchema, db: DB = Depends(get_db)):
     try:
-        AUTH.register_user(**data.model_dump())
+        user = AUTH.register_user(**data.model_dump())
     except ValueError:
-        message = {"message": "Invalid credential provided"}
+        message = {"message": "User with email already exists"}
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
         )
 
-
-    #TODO send user verification email
-    
+    #TODO send user verification email    
     return JSONResponse(
         content={"message": "User created successfully"},
         status_code=status.HTTP_201_CREATED,
     )
 
+
+#TODO user login endpoint
+
+
+
+#TODO user logout password endpoint
+
+
+# TODO USER forgot password endpoint
+
+
+#TODO user change password endpoint
+
+#TODO oauth2 auth endpoint
