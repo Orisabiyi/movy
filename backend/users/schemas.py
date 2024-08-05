@@ -5,12 +5,16 @@ from string import (
     punctuation,
     whitespace,
 )
+from typing import Tuple
 
 from email_validator import EmailNotValidError, validate_email
-from pydantic import BaseModel, EmailStr, ValidationError, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
+from pydantic_core import PydanticCustomError
+
+from .models import User
 
 
-def _password_is_valid(password: str) -> bool:
+def _password_is_valid(password: str) -> Tuple[bool, str]:
     """
     validate password meet requirement criteria
 
@@ -27,14 +31,17 @@ def _password_is_valid(password: str) -> bool:
 
     str_password = password.strip()
 
-    if len(str_password) < MIN_SIZE or len(str_password) > MAX_SIZE:
-        return False
+    len_pass = len(str_password)
+    if len_pass < MIN_SIZE:
+        return False, f"Provided password too short must be >= {MIN_SIZE}"
+    if len_pass > MAX_SIZE:
+        return False, f"Provided password too long limit <= {MAX_SIZE}"
     valid_chars = {"-", "_", ".", "!", "@", "#", "$", "^", "&", "(", ")"}
     invalid_chars = set(punctuation + whitespace) - valid_chars
 
     for char in invalid_chars:
         if char in str_password:
-            return False
+            return False, f"Invalid punctuation found in password expected punctuation should be {valid_chars}"
 
     password_has_digits = False
 
@@ -44,7 +51,7 @@ def _password_is_valid(password: str) -> bool:
             break
 
     if not password_has_digits:
-        return False
+        return False, f"Password must contain atleast one or more digits"
 
     password_has_lowercase = False
     for char in ascii_lowercase:
@@ -52,7 +59,7 @@ def _password_is_valid(password: str) -> bool:
             password_has_lowercase = True
             break
     if not password_has_lowercase:
-        return False
+        return False, "password must contain lowercase letters"
 
     password_has_uppercase = False
     for char in ascii_uppercase:
@@ -61,9 +68,9 @@ def _password_is_valid(password: str) -> bool:
             break
 
     if not password_has_uppercase:
-        return False
+        return False, "password must contain uppercase letters"
 
-    return True
+    return True, ""
 
 
 class UserBaseSchema(BaseModel):
@@ -84,16 +91,24 @@ class SignUpUserSchema(UserBaseSchema):
         try:
             email = validate_email(value)
         except EmailNotValidError:
-            raise ValidationError("Invalid email address provided")
+            raise PydanticCustomError(
+                "string",
+                "Invalid email address provided",
+                dict(wrong_type=value),
+            )
         return value
 
     @field_validator("password")
     @classmethod
     def validate_password(cls, value, **kwargs):
-        if not _password_is_valid(value):
-            raise ValidationError("Invalid password provided")
+        password = _password_is_valid(value)
+        if not password[0]:
+            raise PydanticCustomError(
+                "string",
+                f"{password[1]}",
+                dict(wrong_type=value),
+            )
         return value
-    
 
 
 class SignUpSuccessfulResponseModel(BaseModel):

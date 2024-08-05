@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.responses import JSONResponse
+from sqlalchemy import func
 from main.database import DB, get_db
 
 from .auth import Auth
@@ -13,16 +14,16 @@ AUTH = Auth()
 @router.post(
     "/signup", status_code=201, response_model=SignUpSuccessfulResponseModel
 )
-def signup(data: SignUpUserSchema, db: DB = Depends(get_db)):
+async def signup(data: SignUpUserSchema, background_tasks: BackgroundTasks, db: DB = Depends(get_db)):
     try:
-        user = AUTH.register_user(**data.model_dump())
+        await AUTH.register_user(background_tasks, **data.model_dump())
     except ValueError:
         message = {"message": "User with email already exists"}
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
         )
 
-    #TODO send user verification email    
+    #TODO send user verification email
     return JSONResponse(
         content={"message": "User created successfully"},
         status_code=status.HTTP_201_CREATED,

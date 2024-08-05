@@ -1,5 +1,7 @@
 from main.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, func, DateTime
+from cryptography.fernet import Fernet
+
 
 
 
@@ -14,10 +16,15 @@ class User(Base):
     updated_at = Column(DateTime, onupdate=func.now())
     is_verified = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
     @property
-    def get_name(self):
+    def get_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    def get_context_string(self, context) -> bytes:
+        from main import settings
+        return f"{context}{self.password[-6]}{self.updated_at.strftime('%m%d%Y%H%M%S')}".encode()

@@ -1,12 +1,14 @@
 from fastapi.exceptions import HTTPException
+from sqlalchemy import func
 from main.database import DB
 from passlib.hash import argon2
 from sqlalchemy.exc import NoResultFound
-
+from .email import send_account_verification_email
 from .models import User
+from fastapi import BackgroundTasks
 
 
-def _hash_password(password: str):
+def hash_password(password: str):
     return argon2.hash(password)
 
 def _verify_hash_password(password: str, hashed_password: str):
@@ -18,13 +20,23 @@ class Auth:
     def __init__(self):
         self._db = DB()
 
-    def register_user(self, **kwargs):
+    async def register_user(self, background_tasks: BackgroundTasks, **kwargs):
         try:
             user = self._db.get(User, email=kwargs["email"])
+            print(user)
             if user:
                 raise ValueError("Invalid credential provided")
         except NoResultFound:
-            kwargs['password'] = _hash_password(kwargs['password'])
-            user = self._db.add(User, **kwargs)
+            pass
+
+        kwargs['password'] = hash_password(kwargs['password'])
+        user = self._db.add(User, **kwargs, close=False)
+        user.updated_at = func.now()
+        self._db._session.commit()
+        context = "verify-email"
+
+        background_tasks.add_task(send_account_verification_email, user, background_tasks, context)
+
+        return user
             
         
