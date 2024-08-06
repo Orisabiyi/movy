@@ -111,6 +111,15 @@ class SignUpUserSchema(UserBaseSchema):
         return value
 
 
-class SignUpSuccessfulResponseModel(BaseModel):
+class SignUpResponseSchema(BaseModel):
     message: str
     status_code: int
+
+
+class UserToken(BaseModel):
+    token: str
+    id: str
+
+class VerifyUserToken(BaseModel):
+    token: bytes
+    id: bytes

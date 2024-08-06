@@ -12,12 +12,8 @@ from main.database import DB
 from main.settings import ENV_PATH
 from movies.models import (
     Cast,
-    Country,
-    # Gender,
     Genre,
-    Language,
     Movie,
-    ProductionCompany,
 )
 from sqlalchemy import Tuple
 
@@ -55,15 +51,6 @@ class TMDB:
         db._session.commit()
         db._close
 
-    def get_country(self):
-        url = f"{self._url}configuration/countries?language=en-US"
-        response = _get_url_response(url, self._headers, self.param)
-        countries = response
-        for country in countries:
-            country = Country(name=country["english_name"])
-            db._session.add(country)
-        db._session.commit()
-        db._close
 
     def get_popular_movies(self):
         """
@@ -93,9 +80,6 @@ class TMDB:
                 }
                 movie_obj = db.add(Movie, close=False, **movie_info)
                 movie_id_lst.append((movie["id"], movie_obj.id))
-                self.prod_company(
-                    movie_detail["production_companies"], movie_obj
-                )
                 self.add_genre(movie_detail["genres"], movie_obj)
         self.movie_id_lst = movie_id_lst
 
@@ -126,24 +110,6 @@ class TMDB:
         resp = _get_url_response(url, self._headers, self.param)
         return resp
 
-    def get_language(self):
-        url = f"{self._url}configuration/languages"
-        resp = _get_url_response(url, headers=self._headers, params=self.param)
-
-        for lang in resp:
-            db.add(Language, lang=lang["english_name"])
-
-    def prod_company(
-        self, prod_company: List[Dict[str, Union[str, int]]], movie_obj: Movie
-    ):
-        for company in prod_company:
-            pc = db.get_or_add(
-                ProductionCompany,
-                close=False,
-                name=company["name"],
-            )
-            movie_obj.movie_production_com.append(pc)
-        db._session.commit()
 
     def add_genre(
         self, movie_genre: List[Dict[str, Union[str, int]]], movie_obj: Movie
@@ -184,7 +150,5 @@ if __name__ == "__main__":
     tmdb = TMDB()
     # tmdb.get_movie()
     tmdb.get_movie_genre()
-    tmdb.get_language()
-    tmdb.get_country()
     tmdb.get_popular_movies()
     tmdb.movie_cast()

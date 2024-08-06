@@ -28,21 +28,12 @@ movie_cast = Table(
 )
 
 # Association table for many-to-many relationship between movies and genre
-movie_genre_association = Table(
+movie_genre = Table(
     "movie_genre",
     Base.metadata,
     Column("id", Integer, autoincrement=True, primary_key=True),
     Column("movie_id", Integer, ForeignKey("movies.id")),
     Column("genre_id", Integer, ForeignKey("genres.id")),
-)
-
-# Association table for many-to-many relationship between production company and movie
-movie_production_company = Table(
-    "movie_production_company",
-    Base.metadata,
-    Column("id", Integer, autoincrement=True, primary_key=True),
-    Column("movie_id", ForeignKey("movies.id")),
-    Column("production_company_id", ForeignKey("production_company.id")),
 )
 
 
@@ -63,28 +54,13 @@ class Movie(Base):
     release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
 
-    # primary_lang_id = Column(
-    #     Integer, ForeignKey("language.id"), nullable=True
-    # )
-    # primary_language = relationship("Language", uselist=False, backref="movie")
-
-    movie_production_com = relationship(
-        "ProductionCompany",
-        secondary=movie_production_company,
-        back_populates="production_com_movies",
-    )
     movie_casts = relationship(
         "Cast", secondary=movie_cast, back_populates="casts_movie"
     )
     movie_genres = relationship(
         "Genre",
-        secondary=movie_genre_association,
+        secondary=movie_genre,
         back_populates="genre_movies",
-    )
-
-    __table_args__ = (
-        Index("ix_title", "title"),
-        Index("ix_release_date", "release_date"),
     )
 
     def __str__(self):
@@ -92,7 +68,7 @@ class Movie(Base):
 
     @property
     def get_path(self):
-        return f'movies/{self.id}'
+        return f"movies/{self.id}"
 
     def movie_to_dict(self):
         dct = self.__dict__
@@ -110,30 +86,21 @@ class Movie(Base):
             "release_date": str(dct["release_date"]),
             "genres": [genre.name for genre in dct["movie_genres"]],
             "starring": [
-                {"name": cast.name, "profile_path": cast.profile_path}
-                for cast in dct["movie_casts"]
-            ][:10],
+                {"name": dct["movie_casts"][i].name, "profile_path": dct["movie_casts"][i].profile_path}
+                for i in range(1, 11)
+            ],
         }
-        print(dct)
         return dct
 
-
-# class MovieStatusEnum(enum.Enum):
-#     RELEASED= 'Released'
-#     UPCOMING = 'Upcoming'
-
-
-# class MovieStatus(Base):
-#     __tablename__ = "movie_status"
-#     status = Column()
-
-# class Gender(Base):
-#     __tablename__ = "gender"
-#     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
-#     name = Column(String(6))
-
-#     def __str__(self):
-#         return self.name
+    __table_args__ = (
+        Index(
+            "ix_my_table_title_description",
+            "title",
+            "description",
+            "tag_line",
+            mysql_prefix="FULLTEXT",
+        ),
+    )
 
 
 class Cast(Base):
@@ -175,18 +142,6 @@ class Cast(Base):
 #     price = Column()
 
 
-# movie metadata
-class Language(Base):
-    __tablename__ = "language"
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    lang = Column(String(100))
-
-    __table_args = Index("ix_primary_lang", "lang")
-
-    def __str__(self):
-        return self.lang
-
-
 class Genre(Base):
     __tablename__ = "genres"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
@@ -194,66 +149,10 @@ class Genre(Base):
 
     genre_movies = relationship(
         "Movie",
-        secondary=movie_genre_association,
+        secondary=movie_genre,
         back_populates="movie_genres",
     )
-    __table_args = Index("ix_genre_name", "name")
-
-    def __str__(self):
-        return self.name
-
-
-# class MovieCertificationEnum(enum.Enum):
-#     NotRated = "NR"
-#     General = "G"
-#     PG = "PG"
-#     PG_13 = "PG-13"
-#     R = "R"
-
-#     @classmethod
-#     def get_description(cls, certification):
-#         descriptions = {
-#             cls.NotRated: "Not rated",
-#             cls.General: "General",
-#             cls.PG: "Parental Guidance",
-#             cls.PG_13: "Parents Strongly Cautioned 13+",
-#             cls.R: "Restricted 18+",
-#         }
-#         return descriptions.get(certification, "Unknown rating")
-
-
-# class MovieCertification(Base):
-#     __tablename__ = "certification"
-#     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-#     cert = Column(
-#         Enum(MovieCertificationEnum), default=MovieCertificationEnum.NotRated
-#     )
-
-#     def __str__(self):
-#         return self.cert
-
-
-class Country(Base):
-    __tablename__ = "country"
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(100))
-
-    __table_args = Index("ix_country", "name")
-
-    def __str__(self):
-        return self.name
-
-
-class ProductionCompany(Base):
-    __tablename__ = "production_company"
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(100))
-    production_com_movies = relationship(
-        "Movie",
-        secondary=movie_production_company,
-        back_populates="movie_production_com",
-    )
-    __table_args = Index("ix_production_company", "name")
+    __table_args = Index("ix_genre_name", "name", mysql_prefix="FULLTEXT")
 
     def __str__(self):
         return self.name

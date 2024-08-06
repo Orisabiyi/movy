@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from main.database import DB, get_db
-from movies.models import Cast, Genre, Movie, ProductionCompany
+from movies.models import Cast, Genre, Movie
 from sqlalchemy import func, text
 from sqlalchemy.orm import joinedload
 

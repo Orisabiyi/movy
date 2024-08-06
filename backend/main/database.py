@@ -40,7 +40,7 @@ class DB:
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
         self.__session: Session | None = None
-        # if os.getenv("TEST_DB") != "1":
+        # if os.getenv("TEST_DB") == "1":
         #     Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
 

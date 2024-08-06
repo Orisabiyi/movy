@@ -36,3 +36,9 @@ DATABASE_DICT = {
 REDIS_HOST=os.getenv("REDIS_HOST", "localhost")
 REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "")
 REDIS_PORT=int(os.getenv("REDIS_PORT", 6379))
+
+HOST_APP= "http://localhost:8000"
+
+
+# cryptography hash
+KEY = os.getenv("CY_KEY", 'JokaPNHDNcQbH3MOYGPyVbHoANFkcYjglRm7rYqjILY=')
