@@ -1,14 +1,15 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status, Header
 from fastapi.responses import JSONResponse
 from main.auth import Auth
 from main.database import DB, get_db
-
 from .models import User
 from .schemas import (
     SignUpResponseSchema,
     SignUpUserSchema,
     UserToken,
     VerifyUserToken,
+    LoginResponseSchema,
+    UserLoginInSchema
 )
 
 router = APIRouter(prefix="/auth", tags=["User auth"])
@@ -39,7 +40,7 @@ async def signup(
     )
 
 
-@router.post("/account-verify", status_code=200)
+@router.post("/verify-account", status_code=200)
 async def verify_user_token_email(
     data: UserToken,
     background_tasks: BackgroundTasks,
@@ -59,7 +60,13 @@ async def verify_user_token_email(
         return JSONResponse(content={"message": "email succcessfully verified"},status_code=200)
 
 # TODO user login endpoint
+@router.post("/login", response_model=LoginResponseSchema)
+async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
+    return await AUTH.get_login_token(data.model_dump(), User)
 
+@router.post('/refresh')
+async def refresh_token(refresh_token: str = Header(...), db: DB = Depends(get_db)):
+    return await AUTH.get_refresh_token(refresh_token)
 
 # TODO user logout password endpoint
 
