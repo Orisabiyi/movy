@@ -72,3 +72,27 @@ class LoginResponseSchema(BaseModel):
     refresh_token: str
     expires_at: int
     token_type: str = "Bearer"
+
+
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr
+
+class ForgotPasswordResponseSchem(BaseModel):
+    message: str
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    id: str
+    password: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value, **kwargs):
+        password = password_is_valid(value)
+        if not password[0]:
+            raise PydanticCustomError(
+                "string",
+                f"{password[1]}",
+                dict(wrong_type=value),
+            )
+        return value

@@ -9,7 +9,10 @@ from .schemas import (
     UserToken,
     VerifyUserToken,
     LoginResponseSchema,
-    UserLoginInSchema
+    UserLoginInSchema,
+    ForgotPasswordSchema,
+    ForgotPasswordResponseSchem,
+    ResetPasswordSchema
 )
 
 router = APIRouter(prefix="/auth", tags=["User auth"])
@@ -59,7 +62,6 @@ async def verify_user_token_email(
     if is_verified:
         return JSONResponse(content={"message": "email succcessfully verified"},status_code=200)
 
-# TODO user login endpoint
 @router.post("/login", response_model=LoginResponseSchema)
 async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
     return await AUTH.get_login_token(data.model_dump(), User)
@@ -71,9 +73,16 @@ async def refresh_token(refresh_token: str = Header(...), db: DB = Depends(get_d
 # TODO user logout password endpoint
 
 
-# TODO USER forgot password endpoint
+@router.post('/forgot-password', status_code=200, response_model=ForgotPasswordResponseSchem)
+async def forgot_password_endpoint(data: ForgotPasswordSchema, background_tasks: BackgroundTasks, db: DB = Depends(get_db)):
+    await AUTH.forgot_password_(data, background_tasks)
+    db._close
+    return JSONResponse(content={"messaage": "Check your mail for reset password link"})
 
 
-# TODO user change password endpoint
+@router.post('/reset-password', status_code=200)
+async def reset_password_endpoint(data: ResetPasswordSchema, db: DB = Depends(get_db)):
+    await AUTH.reset_password(data, User)
+    return JSONResponse(content={"message": "password reset successful"}, status_code=200)
 
 # TODO oauth2 auth endpoint
