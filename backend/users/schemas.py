@@ -1,6 +1,6 @@
 
 from email_validator import EmailNotValidError, validate_email
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from pydantic_core import PydanticCustomError
 from main.security import password_is_valid
 from .models import User
@@ -40,7 +40,7 @@ class SignUpUserSchema(UserBaseSchema):
         if not password[0]:
             raise PydanticCustomError(
                 "string",
-                f"{password[1]}",
+                f"{password[1]}", #type: ignore
                 dict(wrong_type=value),
             )
         return value
@@ -64,9 +64,7 @@ class UserLoginInSchema(BaseModel):
     email: EmailStr
     password: str
 
-    # class Config:
-    #     from_attributes = True
-
+    
 class LoginResponseSchema(BaseModel):
     access_token: str
     refresh_token: str
@@ -92,7 +90,7 @@ class ResetPasswordSchema(BaseModel):
         if not password[0]:
             raise PydanticCustomError(
                 "string",
-                f"{password[1]}",
+                f"{password[1]}", #type: ignore
                 dict(wrong_type=value),
             )
         return value

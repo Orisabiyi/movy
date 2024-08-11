@@ -80,7 +80,7 @@ async def forgot_password_endpoint(data: ForgotPasswordSchema, background_tasks:
     return JSONResponse(content={"messaage": "Check your mail for reset password link"})
 
 
-@router.post('/reset-password', status_code=200)
+@router.patch('/reset-password', status_code=200)
 async def reset_password_endpoint(data: ResetPasswordSchema, db: DB = Depends(get_db)):
     await AUTH.reset_password(data, User)
     return JSONResponse(content={"message": "password reset successful"}, status_code=200)

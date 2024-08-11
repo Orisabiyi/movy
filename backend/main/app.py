@@ -3,7 +3,9 @@ from math import floor
 from typing import List, Optional, TypeVar
 from urllib.parse import urlencode
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi_pagination import Page, Params, add_pagination, paginate
 from fastapi_pagination.default import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
@@ -22,6 +24,7 @@ app = FastAPI(
                     listings and delivers essential information such as titles, release dates, and posters.""",
     version="1.0.0",
 )
+
 
 T = TypeVar("T")
 
@@ -42,7 +45,7 @@ def get_custom_page(
     query_params = request.query_params
 
     def create_url(page_num: int) -> str:
-        query_params._dict["page"] = page_num
+        query_params._dict["page"] = page_num #type: ignore
         return f"{base_url}?{urlencode(query_params)}"
 
     next_url = (
@@ -50,13 +53,13 @@ def get_custom_page(
     )
     prev_url = create_url(current_page - 1) if current_page > 1 else None
     return CustomPage(
-        results=page.items,
+        results=page.items, #type: ignore
         total=page.total,
         next=next_url,
         prev=prev_url,
         total_pages=total_pages,
         pages_remaining=pages_remaining,
-        page_size=page.size,
+        page_size=page.size, #type: ignore
     )
 
 
@@ -73,8 +76,8 @@ class CustomParams(Params):
     response_model=CustomPage[MovieListSchemas],
     status_code=200,
     response_description="endpoint for listing every movies in the database",
-    responses=lst_movie_response,
-    tags=["MOVY LISTING"]
+    responses=lst_movie_response, #type: ignore
+    tags=["MOVY LISTING"],
 )
 def get_all_movies(
     request: Request,
@@ -83,6 +86,7 @@ def get_all_movies(
 ) -> CustomPage[MovieListSchemas]:
 
     from main.m_db import REDIS_CLI
+
     value_set = REDIS_CLI.get("movie_list_value")
 
     # add the data for caching
@@ -110,7 +114,7 @@ def get_all_movies(
             json.dumps([movie.model_dump_json() for movie in m_list]),
         )
     else:
-        value_set = REDIS_CLI.get("movie_list_value").decode("UTF-8")
+        value_set = REDIS_CLI.get("movie_list_value").decode("UTF-8") #type: ignore
         m_list = [
             MovieListSchemas(**json.loads(movie))
             for movie in json.loads(value_set)
@@ -124,7 +128,79 @@ def get_all_movies(
 add_pagination(app)
 
 from movies import movie_routes
+from theatre import theater_routes
 from users import user_routes
 
 app.include_router(movie_routes.router)
 app.include_router(user_routes.router)
+app.include_router(theater_routes.router)
+
+
+async def custom_validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    errors = exc.errors()
+    # Customize the format here
+    custom_errors = [
+        {
+            "field": error["loc"][1],
+            "message": error["msg"],
+            "error_type": error["type"],
+        }
+        for error in errors
+    ]
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"errors": custom_errors},
+    )
+
+
+app.add_exception_handler(
+    RequestValidationError, custom_validation_exception_handler #type: ignore
+)
+
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title="Custom Validation Error Example",
+        version="1.0.0",
+        description="This is a custom validation error response format",
+        routes=app.routes,
+    )
+
+    validation_error_schema = {
+        "type": "object",
+        "properties": {
+            "errors": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "field": {"type": "string"},
+                        "message": {"type": "string"},
+                        "error_type": {"type": "string"},
+                    },
+                },
+            }
+        },
+    }
+
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            if "422" in openapi_schema["paths"][path][method]["responses"]:
+                openapi_schema["paths"][path][method]["responses"]["422"] = {
+                    "description": "Validation Error",
+                    "content": {
+                        "application/json": {"schema": validation_error_schema}
+                    },
+                }
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi

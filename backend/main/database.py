@@ -3,8 +3,7 @@ from typing import Dict, Union
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
 from .settings import BASE_DIR, DATABASE_DICT
 
@@ -19,9 +18,7 @@ Base = declarative_base()
 ssl_args = {
     "ssl": {
         "sslmode": "REQUIRED",
-        "ca": BASE_DIR
-        / "main"
-        / "ca.pem",  # Replace '/path/to/ca-cert.pem' with the actual path to your CA cert file
+        "ca": BASE_DIR / "main" / "ca.pem",
     }
 }
 
@@ -33,12 +30,19 @@ class DB:
         """
         initalize sql engine and session for sql
         """
+
+        # database for my localmachine
         if os.getenv("TEST_DB") == "1":
             self._engine = create_engine(DATABASE_URL, echo=False)
+
         else:
+            # production database
             self._engine = create_engine(
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
+        # unittest database
+        if os.getenv("PYTEST") == "1":
+            self._engine = create_engine(os.getenv("DATABASE_URL", ''), echo=False)
         self.__session: Session | None = None
         # if os.getenv("TEST_DB") == "1":
         #     Base.metadata.drop_all(self._engine)
@@ -116,6 +120,7 @@ class DB:
 def get_db():
     db = DB()
     try:
+        print("Using main database")
         yield db
     finally:
         db._close

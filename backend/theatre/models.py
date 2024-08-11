@@ -15,7 +15,7 @@ from sqlalchemy import (
     func,
 )
 from users.models import User
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 
 theatre_address = Table(
@@ -29,15 +29,18 @@ theatre_address = Table(
 class Theatre(Base):
     __tablename__ = "theatre"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(100), unique=True)
     name = Column(String(100), nullable=False, unique=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime)
+    updated_at = Column(DateTime, onupdate=func.now())
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
 
     def __str__(self):
         return self.name
 
-    theatres = relationship("Address", secondary=theatre_address, back_populates="address")
+    address = relationship("Address", secondary=theatre_address, back_populates="theatres")
 
 class Address(Base):
     __tablename__ = "address"
@@ -53,12 +56,12 @@ class Address(Base):
 
 
 class TheatreReviewRating(Base):
+    __tablename__ = "theatre_review_rating"
     id = Column(Integer, primary_key=True, autoincrement=True)
     review = Column(Text)
     rating = Column(Integer)
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
     theatre_id = Column(Integer, ForeignKey("theatre.id"))
-
     users = relationship(User, backref="review")
     theatres = relationship(Theatre, backref="theatre")
-    
+ 

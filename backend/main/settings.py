@@ -42,3 +42,11 @@ HOST_APP= "http://localhost:8000"
 
 # cryptography hash
 KEY = os.getenv("CY_KEY", 'JokaPNHDNcQbH3MOYGPyVbHoANFkcYjglRm7rYqjILY=')
+
+
+#JWT secret key
+ACCESS_TOKEN_SECRET_KEY = os.getenv("ACCESS_TOKEN_SECRET_KEY") or "JokaPNHDNcQbH3MOYGPyVbHoANFkcYjglRm7rYqjILY="
+REFRESH_TOKEN_SECRET_KEY = os.getenv("REFRESH_TOKEN_SECRET_KEY") or "JokaPNHDNcQbH3MOYGPyVbHoANFkcYjglRm7rYqjILY="
+# access token and refresh token in minute
+ACCESS_TOKEN_IN_MIN = int(os.getenv("ACCESS_TOKEN_IN_MIN", 1))
+REFRESH_TOKEN_IN_MIN = int(os.getenv("REFRESH_TOKEN_IN_MIN", 1440))

@@ -63,7 +63,7 @@ async def send_account_verification_email(
         "app_name": "Movy",
         "name": obj.get_name,
         "verification_link": activate_url,
-        "current_year": current_year
+        "current_year": current_year,
     }
     subject = "Movy Account Verification"
     template_name = "user/account-verification.html"
@@ -76,14 +76,53 @@ async def send_account_verification_email(
     )
 
 
-async def send_account_activation_email(obj, background_tasks: BackgroundTasks):
+async def send_account_activation_email(
+    obj, background_tasks: BackgroundTasks
+):
     """
     send both user and theatre activation email
     """
     current_year = obj.created_at.year
-    data = {"app_name": "Movy", "name": obj.get_name, "current_year": current_year}
+    data = {
+        "app_name": "Movy",
+        "name": obj.get_name,
+        "current_year": current_year,
+    }
     subject = "Movy Account Activation"
     template_name = "user/account-activation.html"
+    await send_email(
+        recipients=[obj.email],
+        subject=subject,
+        context=data,
+        template_name=template_name,
+        background_task=background_tasks,
+    )
+
+
+async def reset_password_email(
+    obj, background_tasks: BackgroundTasks, context: str
+):
+    """
+    send both user and theatre verification emaail
+    """
+    from main import settings
+    from datetime import datetime
+    string_context = obj.get_context_string(context=context)
+    cy_key = Fernet(settings.KEY.encode())
+    token = cy_key.encrypt(hash_password(string_context).encode()).decode()
+    email = cy_key.encrypt(obj.email.encode()).decode()
+    reset_password_url = (
+        f"{settings.HOST_APP}/auth/password-reset?token={token}&id={email}"
+    )
+    current_year = datetime.now().year
+    data = {
+        "app_name": "Movy",
+        "name": obj.get_name,
+        "reset_password_url": reset_password_url,
+        "current_year": current_year,
+    }
+    subject = "Password Reset"
+    template_name = "user/password-reset.html"
     await send_email(
         recipients=[obj.email],
         subject=subject,
