@@ -98,6 +98,7 @@ class ForgotPasswordSchema(BaseModel):
     email: EmailStr
 
 class ForgotPasswordResponseSchem(BaseModel):
+    status_code: int
     message: str
 
 class ResetPasswordSchema(BaseModel):

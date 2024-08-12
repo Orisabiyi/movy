@@ -8,10 +8,16 @@ from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 
-from .email_context.context import USER_VERIFICATION_ACCOUNT, FORGOT_PASSWORD_CONTEXT
-from .utils import unique_string, _decode_token, _verify_hash_password, hash_password
-
-
+from .email_context.context import (
+    FORGOT_PASSWORD_CONTEXT,
+    USER_VERIFICATION_ACCOUNT,
+)
+from .utils import (
+    _decode_token,
+    _verify_hash_password,
+    hash_password,
+    unique_string,
+)
 
 
 class Auth:
@@ -29,7 +35,7 @@ class Auth:
         try:
             user = self._db.get(klass, email=kwargs["email"])
             if user:
-                raise ValueError("Invalid credential provided")
+                raise ValueError("Email already exists")
         except NoResultFound:
             pass
 
@@ -96,25 +102,33 @@ class Auth:
         if not user:
             raise HTTPException(
                 status_code=400,
-                detail={"message": "Invalid email or password"},
+                detail={
+                    "message": "Invalid email or password",
+                    "status_code": 400,
+                },
             )
         if not _verify_hash_password(data["password"], user.password):
             raise HTTPException(
                 status_code=400,
-                detail={"message": "Invalid email or password"},
+                detail={
+                    "message": "Invalid email or password",
+                    "status_code": 400,
+                },
             )
         if not user.is_verified:
             raise HTTPException(
                 status_code=400,
                 detail={
-                    "message": "Your account is not verified please check your mail box"
+                    "message": "Your account is not verified please check your mail box",
+                    "status_code": 400,
                 },
             )
         if not user.is_active:
             raise HTTPException(
                 status_code=400,
                 detail={
-                    "message": "Your account has been deactivated please contact admin"
+                    "message": "Your account has been deactivated please contact admin",
+                    "status_code": 400,
                 },
             )
 
@@ -134,7 +148,11 @@ class Auth:
 
         if not pay_load:
             raise HTTPException(
-                status_code=400, detail={"message": "Invalid token provided"}
+                status_code=400,
+                detail={
+                    "message": "Invalid token provided",
+                    "status_code": 400,
+                },
             )
 
         rk = str_decode(pay_load.get("refresh_key"))
@@ -155,9 +173,13 @@ class Auth:
         )
         if not user_token:
             raise HTTPException(
-                status_code=400, detail={"message": "Invalid token provided"}
+                status_code=400,
+                detail={
+                    "message": "Invalid token provided",
+                    "status_code": 400,
+                },
             )
-        user_token.expires_at = datetime.now() #type: ignore
+        user_token.expires_at = datetime.now()  # type: ignore
         self._db._session.add(user_token)
         self._db._session.commit()
         self._db._session.refresh(user_token)
@@ -168,20 +190,42 @@ class Auth:
         handle user forgot password request
         """
         from users.models import User
+
         from .email import reset_password_email
+
         try:
             user = self._db.get(User, email=data.email)
         except NoResultFound:
-            raise HTTPException(status_code=404, detail={"message": "Email does not exists"})
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "message": "Email does not exists",
+                    "status_code": 400,
+                },
+            )
 
         if not user.is_active:
-            raise HTTPException(status_code=400, detail={"message": "Email has been deactivated please contact support"})
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Email has been deactivated please contact support",
+                    "status_code": 400,
+                },
+            )
 
         if not user.is_verified:
-            raise HTTPException(status_code=400, detail={"message": "Email need to be verified please check your mail"})
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Email need to be verified please check your mail",
+                    "status_code": 400,
+                },
+            )
 
         context = FORGOT_PASSWORD_CONTEXT
-        background_tasks.add_task(reset_password_email, user, background_tasks, context)
+        background_tasks.add_task(
+            reset_password_email, user, background_tasks, context
+        )
 
     async def reset_password(self, data, klass):
         """
@@ -191,20 +235,26 @@ class Auth:
         email = _decode_token(data.id)
 
         try:
-            
+
             user = self._db.get(klass, email=email)
         except NoResultFound:
-            raise HTTPException(status_code=400, detail={"message": "invalid token passed"})
+            raise HTTPException(
+                status_code=400,
+                detail={"message": "invalid token passed", "status_code": 400},
+            )
 
         str_context = user.get_context_string(FORGOT_PASSWORD_CONTEXT)
 
         if not _verify_hash_password(str_context, token):
-            raise HTTPException(status_code=400, detail={"message": "invalid token passed"})
+            raise HTTPException(
+                status_code=400,
+                detail={"message": "invalid token passed", "status_code": 400},
+            )
         user.password = hash_password(data.password)
         user.updated_at = func.now()
         self._db._session.add(user)
         self._db._session.commit()
- 
+
     def _generate_token(self, user):
         # generate JWT token
         refresh_key = unique_string(100)

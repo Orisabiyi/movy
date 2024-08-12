@@ -4,7 +4,6 @@
 - TEST user token is not invalid
 - TEST invalid email is not passed
 """
-from sqlalchemy.exc import IntegrityError
 from main.email_context import context
 from test.conftest import TestingSessionLocal
 from main.utils import hash_password, _encode_token, _decode_token

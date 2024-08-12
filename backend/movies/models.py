@@ -54,6 +54,7 @@ class Movie(Base):
     release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
 
+    show_times = relationship("ShowTime", back_populates="movies")
     movie_casts = relationship(
         "Cast", secondary=movie_cast, back_populates="casts_movie"
     )

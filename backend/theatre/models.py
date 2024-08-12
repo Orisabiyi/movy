@@ -13,6 +13,8 @@ from sqlalchemy import (
     Table,
     Text,
     func,
+    Time,
+    Date
 )
 from users.models import User
 from sqlalchemy.orm import relationship, backref
@@ -41,6 +43,7 @@ class Theatre(Base):
         return self.name
 
     address = relationship("Address", secondary=theatre_address, back_populates="theatres")
+    show_times = relationship("ShowTime", back_populates="theatre") 
 
 class Address(Base):
     __tablename__ = "address"
@@ -62,6 +65,19 @@ class TheatreReviewRating(Base):
     rating = Column(Integer)
     user_id = Column(Integer, ForeignKey("users.id"))
     theatre_id = Column(Integer, ForeignKey("theatre.id"))
-    users = relationship(User, backref="review")
-    theatres = relationship(Theatre, backref="theatre")
- 
+    users = relationship(User, backref="reviews")
+    theatre = relationship(Theatre, backref="reviews")
+
+
+class ShowTime(Base):
+    __tablename__ = "show_time"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    time = Column(Time, nullable=False)
+    date =  Column(Date, nullable=False)
+    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
+    theatre_id = Column(Integer, ForeignKey("theatre.id"), nullable=False)
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    theatre = relationship(Theatre, back_populates="show_times") 
+    movie = relationship("Movie", back_populates="show_times") 
