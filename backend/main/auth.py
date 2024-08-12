@@ -1,32 +1,17 @@
 from datetime import datetime, timedelta
 from typing import Dict
 
-from cryptography.fernet import Fernet
 from fastapi import BackgroundTasks, HTTPException
 from main import settings
 from main.database import DB
-from passlib.hash import argon2
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 
 from .email_context.context import USER_VERIFICATION_ACCOUNT, FORGOT_PASSWORD_CONTEXT
-from .utils import unique_string
+from .utils import unique_string, _decode_token, _verify_hash_password, hash_password
 
 
-def hash_password(password: str):
-    return argon2.hash(password)
-
-
-def _verify_hash_password(password: str, hashed_password: str):
-    return argon2.verify(password, hashed_password)
-
-
-def _decode_token(encrpt: bytes) -> str:
-    from main import settings
-
-    cypher_token = Fernet(settings.KEY)
-    return cypher_token.decrypt(encrpt).decode()
 
 
 class Auth:
@@ -172,7 +157,7 @@ class Auth:
             raise HTTPException(
                 status_code=400, detail={"message": "Invalid token provided"}
             )
-        user_token.expires_at = datetime.now()
+        user_token.expires_at = datetime.now() #type: ignore
         self._db._session.add(user_token)
         self._db._session.commit()
         self._db._session.refresh(user_token)

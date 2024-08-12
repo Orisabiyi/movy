@@ -28,7 +28,7 @@ class User(Base):
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-    def get_context_string(self, context) -> bytes:
+    def get_context_string(self, context: str) -> bytes:
         from main import settings
         return f"{context}{self.password[-6]}{self.updated_at.strftime('%m%d%Y%H%M%S')}".encode()
 

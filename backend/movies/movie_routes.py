@@ -20,7 +20,7 @@ router = APIRouter()
     response_model=MovieDetailSchema,
     tags=["MOVY LISTING"],
     response_description="endpoints for a detailed movie using id",
-    responses=movie_detail_response,
+    responses=movie_detail_response, #type: ignore
 )
 def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
 
@@ -46,7 +46,7 @@ def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
     "/search/",
     tags=["MOVY LISTING"],
     response_model=List[MovieListSchemas],
-    responses=movie_search,
+    responses=movie_search, #type: ignore
 )
 def search_movies(
     request: Request,

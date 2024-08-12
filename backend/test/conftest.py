@@ -1,3 +1,4 @@
+from datetime import datetime
 from dotenv import find_dotenv, load_dotenv
 
 import pytest
@@ -10,10 +11,10 @@ def load_env():
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 from main.database import Base, get_db
 from main.app import app
 from fastapi.testclient import TestClient
-
 # Create an in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, )
@@ -29,15 +30,45 @@ FIRST_NAME = faker.first_name()
 
 
 # Override the get_db dependency
+# @pytest.fixture(scope="function")
 def override_get_db():
+    db = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
         yield db
+    except IntegrityError:
+        db.rollback()
+        raise 
     finally:
         db.close()
 # Create the FastAPI test client
 override_app = TestClient(app)
 import os
+
+@pytest.fixture(scope="function")
+def data():
+    return {
+        "first_name": FIRST_NAME,
+        "last_name": LAST_NAME,
+        "email": EMAIL,
+        "password": "Batman123!!",
+    }
+
+
+@pytest.fixture(scope="function")
+def user(data):
+    from users.models import User
+    with TestingSessionLocal() as session:
+        try:
+            user = User(**data)
+            user.updated_at = datetime.now() #type: ignore
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            return user
+        except IntegrityError:
+            session.rollback()
+            return user
+         
 
 
 @pytest.fixture(scope="module")
