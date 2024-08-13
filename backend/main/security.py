@@ -94,12 +94,12 @@ def password_is_valid(password: str) -> Tuple[bool, str]:
         return False, f"Provided password too short must be >= {MIN_SIZE}"
     if len_pass > MAX_SIZE:
         return False, f"Provided password too long limit <= {MAX_SIZE}"
-    valid_chars = {"-", "_", ".", "!", "@", "#", "$", "^", "&", "(", ")"}
-    invalid_chars = set(punctuation + whitespace) - valid_chars
+    # valid_chars = {"-", "_", ".", "!", "@", "#", "$", "^", "&", "(", ")"}
+    # invalid_chars = set(punctuation + whitespace) - valid_chars
 
-    for char in invalid_chars:
-        if char in str_password:
-            return False, f"Invalid punctuation found in password expected punctuation should be {valid_chars}"
+    # for char in invalid_chars:
+    #     if char in str_password:
+    #         return False, f"Invalid punctuation found in password expected punctuation should be {valid_chars}"
 
     password_has_digits = False
 
@@ -129,3 +129,4 @@ def password_is_valid(password: str) -> Tuple[bool, str]:
         return False, "password must contain uppercase letters"
 
     return True, ""
+

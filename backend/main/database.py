@@ -120,7 +120,6 @@ class DB:
 def get_db():
     db = DB()
     try:
-        print("Using main database")
         yield db
     finally:
         db._close

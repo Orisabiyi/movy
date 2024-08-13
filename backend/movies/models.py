@@ -43,6 +43,7 @@ class Movie(Base):
     """
 
     __tablename__ = "movies"
+    from theatre.models import ShowTime
     id = Column(Integer, autoincrement=True, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
@@ -54,7 +55,7 @@ class Movie(Base):
     release_date = Column(Date)
     uploaded_at = Column(DateTime, default=func.now())
 
-    show_times = relationship("ShowTime", back_populates="movies")
+    show_times = relationship(ShowTime, back_populates="movies")
     movie_casts = relationship(
         "Cast", secondary=movie_cast, back_populates="casts_movie"
     )

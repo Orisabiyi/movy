@@ -69,11 +69,14 @@ class SignUpUserSchema(UserBaseSchema):
         return value
 
 class SignUpResponseSchema(BaseModel):
-    message: str
+    refresh_token: str
+    access_token: str
+    expires_at: int
+    token_type: str = "Bearer"
     status_code: int
 
 
-class UserToken(BaseModel):
+class UserTokenSchema(BaseModel):
     token: str
     id: str
 
@@ -86,7 +89,6 @@ class UserLoginInSchema(BaseModel):
     email: EmailStr
     password: str
 
-    
 class LoginResponseSchema(BaseModel):
     access_token: str
     refresh_token: str

@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -7,10 +9,11 @@ from fastapi import (
     status,
 )
 from fastapi.responses import JSONResponse
+from main import settings
 from main.auth import Auth
 from main.database import DB, get_db
 
-from .models import User
+from .models import User, UserToken
 from .open_apidoc import (
     forgot_password_response_doc,
     login_response_doc,
@@ -27,11 +30,11 @@ from .schemas import (
     SignUpResponseSchema,
     SignUpUserSchema,
     UserLoginInSchema,
-    UserToken,
+    UserTokenSchema,
     VerifyUserToken,
 )
 
-router = APIRouter(prefix="/auth", tags=["User auth"])
+router = APIRouter(prefix="/auth/user", tags=["User auth"])
 
 AUTH = Auth()
 
@@ -48,27 +51,44 @@ async def signup(
     db: DB = Depends(get_db),
 ):
     try:
-        await AUTH.register_user(User, background_tasks, **data.model_dump())
+        tokens, obj = await AUTH.register_user(
+            User, background_tasks, **data.model_dump()
+        )
     except ValueError:
         message = {"message": "User with email already exists"}
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
         )
-
-    content = SignUpResponseSchema(
-        **{"message": "User created successfully", "status_code": 201}
-    ).model_dump()
-    return JSONResponse(
+    tokens["status_code"] = 201
+    content = SignUpResponseSchema(**tokens).model_dump()
+    resp = JSONResponse(
         content=content,
         status_code=status.HTTP_201_CREATED,
     )
+    # set user refresh token
+    resp.set_cookie(
+        "refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        path="/auth/refresh",
+        expires=datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN),
+    )
+    # set user access token cookies
+    resp.set_cookie(
+        "access_token",
+        value=tokens["access_token"],
+        httponly=True,
+        expires=datetime.now(timezone.utc)
+        + timedelta(minutes=settings.ACCESS_TOKEN_IN_MIN),
+    )
+    return resp
 
 
 @router.post(
     "/verify-account", status_code=200, responses=verify_token_response  # type: ignore
 )
 async def verify_user_token_email(
-    data: UserToken,
+    data: UserTokenSchema,
     background_tasks: BackgroundTasks,
     db: DB = Depends(get_db),
 ):
@@ -131,7 +151,7 @@ async def forgot_password_endpoint(
 
 
 @router.patch(
-    "/reset-password", status_code=200, responses=reset_password_response_doc # type: ignore
+    "/reset-password", status_code=200, responses=reset_password_response_doc  # type: ignore
 )
 async def reset_password_endpoint(
     data: ResetPasswordSchema, db: DB = Depends(get_db)

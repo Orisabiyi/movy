@@ -7,6 +7,8 @@ from main.database import DB
 from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
+from theatre.models import Theatre, TheatreToken
+from users.models import UserToken
 
 from .email_context.context import (
     FORGOT_PASSWORD_CONTEXT,
@@ -18,6 +20,8 @@ from .utils import (
     hash_password,
     unique_string,
 )
+
+TokeModel = {"user": UserToken, "theatre": TheatreToken}
 
 
 class Auth:
@@ -40,16 +44,13 @@ class Auth:
             pass
 
         kwargs["password"] = hash_password(kwargs["password"])
-        obj = self._db.add(klass, **kwargs, close=False)
-        obj.updated_at = func.now()
-        self._db._session.commit()
+        kwargs["updated_at"] = func.now()
+        obj = self._db.add(klass, **kwargs)
         context = USER_VERIFICATION_ACCOUNT
-
         background_tasks.add_task(
             send_account_verification_email, obj, background_tasks, context
         )
-
-        return obj
+        return self._generate_token(obj, "user"), obj
 
     async def token_verification(
         self, klass, background_tasks: BackgroundTasks, **kwargs
@@ -74,7 +75,6 @@ class Auth:
             )
 
         str_context = obj.get_context_string(USER_VERIFICATION_ACCOUNT)
-
         if not _verify_hash_password(str_context, hashed_token):
             raise HTTPException(
                 status_code=400,
@@ -98,8 +98,8 @@ class Auth:
         """
         from .security import load_user
 
-        user = await load_user(data["email"], klass)
-        if not user:
+        obj = await load_user(data["email"], klass)
+        if not obj:
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -107,7 +107,7 @@ class Auth:
                     "status_code": 400,
                 },
             )
-        if not _verify_hash_password(data["password"], user.password):
+        if not _verify_hash_password(data["password"], obj.password):
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -115,7 +115,7 @@ class Auth:
                     "status_code": 400,
                 },
             )
-        if not user.is_verified:
+        if not obj.is_verified:
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -123,7 +123,7 @@ class Auth:
                     "status_code": 400,
                 },
             )
-        if not user.is_active:
+        if not obj.is_active:
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -132,7 +132,7 @@ class Auth:
                 },
             )
 
-        return self._generate_token(user)
+        return self._generate_token(obj, "user")
 
     async def get_refresh_token(self, refresh_token: str):
         """
@@ -183,7 +183,7 @@ class Auth:
         self._db._session.add(user_token)
         self._db._session.commit()
         self._db._session.refresh(user_token)
-        return self._generate_token(user_token.user)
+        return self._generate_token(user_token.user, "user")
 
     async def forgot_password_(self, data, background_tasks: BackgroundTasks):
         """
@@ -255,22 +255,29 @@ class Auth:
         self._db._session.add(user)
         self._db._session.commit()
 
-    def _generate_token(self, user):
+    def _generate_token(self, user, type: str):
         # generate JWT token
         refresh_key = unique_string(100)
         access_key = unique_string(50)
-
         rt_expires = timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN)
 
         from main.security import generate_token_payload, str_encode
-        from users.models import UserToken
 
-        user_token = UserToken(
-            user_id=user.id,
-            refresh_token=refresh_key,
-            access_token=access_key,
-            expires_at=datetime.now() + rt_expires,
-        )
+        user_token = None
+        if type == "user":
+            user_token = TokeModel[type](
+                user_id=user.id,
+                refresh_token=refresh_key,
+                access_token=access_key,
+                expires_at=datetime.now() + rt_expires,
+            )
+        else:
+            user_token = TokeModel[type](
+                theatre_id=user.id,
+                refresh_token=refresh_key,
+                access_token=access_key,
+                expires_at=datetime.now() + rt_expires,
+            )
         self._db._session.add(user_token)
         self._db._session.commit()
         self._db._session.refresh(user_token)
@@ -279,7 +286,7 @@ class Auth:
             "sub": str_encode(str(user.id)),
             "access_key": str_encode(access_key),
             "refresh_key": str_encode(refresh_key),
-            "roles": ["user"],
+            "roles": [type],
             "name": user.get_name,
         }
 
@@ -293,14 +300,14 @@ class Auth:
             "sub": str_encode(str(user.id)),
             "access_key": str_encode(access_key),
             "refresh_key": str_encode(refresh_key),
-            "roles": ["user"],
+            "name": user.get_name,
+            "roles": [type],
         }
 
         rt_expires_at = timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN)
         refresh_token = generate_token_payload(
             rt_data, settings.REFRESH_TOKEN_SECRET_KEY, rt_expires_at
         )
-
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,

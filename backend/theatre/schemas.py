@@ -16,4 +16,20 @@ class TheatreSignUp(TheatreBase):
 
 class TheatreSignUpResponse(BaseModel):
     status_code: int
-    message: str
+    access_token: str
+    refresh_token: str
+    expires_at: int
+
+class TheatreLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class TheatreLoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    expires_at: int
+
+class VeriifyTheatreAccount(BaseModel):
+    id: str
+    token: str
