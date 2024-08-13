@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 from typing import Optional, Generic, TypeVar, List, Dict
 
 
@@ -49,5 +49,7 @@ class MovieDetailSchema(BaseModel):
     starring: List[Dict[str, str]]
     # movie_production_com: List[str]
 
-    class Config:
-        from_attributes = True
+
+class GenreList(BaseModel):
+    id: int
+    name: str

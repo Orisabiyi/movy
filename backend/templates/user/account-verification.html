@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Movy Account</title>
+</head>
+<body>
+    <h1>Movy</h1>
+    <h2>Verify Your Email Address</h2>
+    
+    <p>Hello {{ name }},</p>
+    
+    <p>Welcome to Movy, your ultimate movie booking app! To start reserving seats for your favorite films, please verify your email address by clicking the link below:</p>
+    
+    <p><a href="{{ verification_link }}">Click here to verify your email</a></p>
+    
+    <p>If the link above doesn't work, you can copy and paste the following URL into your browser:</p>
+    
+    <p>{{ verification_link }}</p>
+    
+    {# <p>This link will expire in 24 hours.</p> #}
+    
+    <p>Get ready to experience the magic of cinema with Movy!</p>
+    
+    <p>If you didn't create an account with Movy, please ignore this email.</p>
+    
+    <hr>
+    
+    <p>This is an automated message. Please do not reply to this email.</p>
+    <p>&copy; {{ current_year }} Movy. All rights reserved.</p>
+</body>
+</html>

@@ -75,13 +75,25 @@ uvicorn main:app --reload
 The app should now be running on `http://127.0.0.1:8000`.
 
 ## Technologies Used
-- FastAPI
 - Python
+- FastAPI
 - MySQL
 - Redis
-- Hosted on Koyeb cloud hosting platform
+- Hosted on Heroku cloud hosting platform
+
+
+a **.env.test** should be create for pytest test environment to run properly and a sqlalchemy database_url for test should be created
+
+###### pytest warning
+if you run into a weird importation warning with pytest while running the tests please use the following command rather it seems to do the trick for me and I don't know why.....
+
+```sh
+python3 -m pytest
+```
+
 
 ## Contributing
 Feel free to open issues or submit pull requests for any enhancements or bug fixes.
 
 Make sure to replace placeholders like `your_test_username`, `your_test_database`, etc., with actual values relevant to your setup. Also, update the repository URL and any other specific details to match your project.
+
