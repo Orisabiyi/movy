@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from main import settings
 from main.auth import Auth
 from main.database import DB, get_db
+from main.security import set_cookie
 
 from .models import User, UserToken
 from .open_apidoc import (
@@ -66,21 +67,8 @@ async def signup(
         status_code=status.HTTP_201_CREATED,
     )
     # set user refresh token
-    resp.set_cookie(
-        "refresh_token",
-        value=tokens["refresh_token"],
-        httponly=True,
-        path="/auth/refresh",
-        expires=datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN),
-    )
-    # set user access token cookies
-    resp.set_cookie(
-        "access_token",
-        value=tokens["access_token"],
-        httponly=True,
-        expires=datetime.now(timezone.utc)
-        + timedelta(minutes=settings.ACCESS_TOKEN_IN_MIN),
-    )
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/signup")
+    set_cookie(resp, "access_token", tokens["access_token"])
     return resp
 
 
@@ -116,7 +104,11 @@ async def verify_user_token_email(
     "/login", response_model=LoginResponseSchema, responses=login_response_doc  # type: ignore
 )
 async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
-    return await AUTH.get_login_token(data.model_dump(), User)
+    tokens = await AUTH.get_login_token(data.model_dump(), User)
+    resp = JSONResponse(content=tokens, status_code=200)
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/signup")
+    set_cookie(resp, "access_token", tokens["access_token"])
+    return resp
 
 
 @router.post("/refresh", responses=refresh_response_doc)  # type: ignore

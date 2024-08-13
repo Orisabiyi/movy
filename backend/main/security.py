@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from .database import DB
 from string import (
@@ -130,3 +131,21 @@ def password_is_valid(password: str) -> Tuple[bool, str]:
 
     return True, ""
 
+
+def set_cookie(resp: JSONResponse, key: str, value: str, path: str = ""):
+    if key == "refresh_token":
+        resp.set_cookie(
+            key=key,
+            value=value,
+            httponly=True,
+            path=path,
+            expires=datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN),
+        )
+    else:
+        resp.set_cookie(
+            key=key,
+            value=value,
+            httponly=True,
+            expires=datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_IN_MIN),
+        )
+        

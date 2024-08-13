@@ -61,6 +61,7 @@ class Auth:
         verify both user and theatre token from request
         """
         hashed_token = _decode_token(kwargs["token"])
+        print(hashed_token)
         email = _decode_token(kwargs["id"])
 
         try:
@@ -92,7 +93,7 @@ class Auth:
         )
         return True
 
-    async def get_login_token(self, data, klass):
+    async def get_login_token(self, data: Dict, klass):
         """
         get user login token credentials
         """
@@ -313,3 +314,4 @@ class Auth:
             "refresh_token": refresh_token,
             "expires_at": expires_at.seconds,
         }
+

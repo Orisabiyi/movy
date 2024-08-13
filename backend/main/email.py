@@ -51,9 +51,8 @@ async def send_account_verification_email(
     """
     from main import settings
 
-    print(obj, 'obj.............')
     string_context = obj.get_context_string(context=context)
-    token = _encode_token(string_context)
+    token = _encode_token(hash_password(string_context).encode())
     email = _encode_token(obj.email.encode())
     activate_url = (
         f"{settings.HOST_APP}/auth/account-verify?token={token}&id={email}"
