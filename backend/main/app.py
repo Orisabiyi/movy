@@ -6,6 +6,8 @@ from urllib.parse import urlencode
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi_pagination import Page, Params, add_pagination, paginate
 from fastapi_pagination.default import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
@@ -61,6 +63,16 @@ def get_custom_page(
         pages_remaining=pages_remaining,
         page_size=page.size, #type: ignore
     )
+
+# middleware setup
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def default_params() -> Params:

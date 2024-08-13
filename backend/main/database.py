@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
-from .settings import BASE_DIR, DATABASE_DICT
+from .settings import BASE_DIR, DATABASE_DICT, DEBUG
 
 DATABASE_URL = (
     f'mysql+pymysql://{DATABASE_DICT["USERNAME"]}:'
@@ -30,13 +30,11 @@ class DB:
         """
         initalize sql engine and session for sql
         """
-
-        # database for my localmachine
-        if os.getenv("TEST_DB") == "1":
+        if DEBUG:
+            print("----------->", "model db")
             self._engine = create_engine(DATABASE_URL, echo=False)
-
         else:
-            # production database
+            print("_-------->", "connected")
             self._engine = create_engine(
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
