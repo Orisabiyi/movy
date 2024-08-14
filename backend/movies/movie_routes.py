@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import requests
@@ -5,12 +6,14 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from main.database import DB, get_db
-from movies.models import Cast, Genre, Movie
-from sqlalchemy import func, text
-from sqlalchemy.orm import joinedload
+from movies.models import Cast, Genre, Movie, movie_cast
+from sqlalchemy import func, text, select
+from sqlalchemy.orm import joinedload, subqueryload, aliased, contains_eager
 
 from .api_doc import movie_detail_response, movie_search
 from .schemas import MovieDetailSchema, MovieListSchemas
+from main.m_db import REDIS_CLI
+
 
 router = APIRouter()
 
@@ -24,22 +27,57 @@ router = APIRouter()
 )
 def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
 
-    movie = (
-        db._session.query(Movie)
-        .options(
-            joinedload(Movie.movie_casts).joinedload(Cast.casts_movie),
-            joinedload(Movie.movie_genres).joinedload(Genre.genre_movies),
+    # get value from redis
+    get_movie = REDIS_CLI.get(f"movie_{movie_id}") # type: ignore
+    if not get_movie:
+        CastAlias = aliased(Cast)
+        # Subquery to get limited cast IDs for the movie
+        limited_casts_subquery = (
+            select(movie_cast.c.cast_id)
+            .filter(movie_cast.c.movie_id == movie_id)
+            .limit(10)
+            .subquery()
         )
-        .filter(Movie.id == movie_id)
-        .first()
-    )
-    if not movie:
-        return JSONResponse(
-            status_code=404,
-            content={"message": "Movie with this id not found"},
+        # Main query to fetch the movie with limited cast details
+        movie_with_limited_casts = (
+            db._session.query(Movie)
+            .join(movie_cast, Movie.id == movie_cast.c.movie_id)
+            .join(Cast, movie_cast.c.cast_id == Cast.id)
+            .filter(Movie.id == movie_id)
+            .filter(Cast.id.in_(select(limited_casts_subquery.c.cast_id)))  # Ensure only the limited cast IDs are used
+            .options(
+                contains_eager(Movie.movie_casts)
+            )
+            .all()
         )
-    data = MovieDetailSchema(**movie.movie_to_dict()).model_dump()
-    return JSONResponse(content=data, status_code=200)
+        if not movie_with_limited_casts:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Movie with this id not found"},
+                )
+        # Extract and print cast details
+        movie_dict = {}
+        for movie in movie_with_limited_casts:
+            movie_dict = {
+                "id": movie.id,
+                "title": movie.title,
+                "description": movie.description,
+                "poster_path": movie.poster_path,
+                "backdrop_path": movie.backdrop_path,
+                "tag_line": movie.tag_line,
+                "trailer_link": movie.trailer_link,
+                "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",
+                "release_date": str(movie.release_date),
+                "genres": [genre.name for genre in movie.movie_genres],
+                "starring": [{"poster_path" :cast.profile_path, "name": cast.name} for cast in movie.movie_casts],
+            }
+        # add the data to the redis server
+        data = MovieDetailSchema(**movie_dict)
+        REDIS_CLI.set(f"movie_{movie_id}", data.model_dump_json())
+    else:
+        
+        data = MovieDetailSchema(**json.loads(get_movie.decode("UTF-8")))#type: ignore
+    return JSONResponse(content=data.model_dump(), status_code=200)
 
 
 @router.get(

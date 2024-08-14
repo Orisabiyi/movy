@@ -31,10 +31,8 @@ class DB:
         initalize sql engine and session for sql
         """
         if DEBUG:
-            print("----------->", "model db")
             self._engine = create_engine(DATABASE_URL, echo=False)
         else:
-            print("_-------->", "connected")
             self._engine = create_engine(
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
@@ -42,7 +40,7 @@ class DB:
         if os.getenv("PYTEST") == "1":
             self._engine = create_engine(os.getenv("DATABASE_URL", ''), echo=False)
         self.__session: Session | None = None
-        # if os.getenv("TEST_DB") == "1":
+        # if os.getenv("TEST_DB") != "1":
         #     Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
 
