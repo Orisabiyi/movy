@@ -1,0 +1,19 @@
+[
+  "test/test_user_routes/test_user_login.py::test_user_login",
+  "test/test_user_routes/test_user_login.py::test_user_login_wrong_password",
+  "test/test_user_routes/test_user_registration.py::test_create_user",
+  "test/test_user_routes/test_user_registration.py::test_create_user_already_exists",
+  "test/test_user_routes/test_user_registration.py::test_direct_db_insertion",
+  "test/test_user_routes/test_user_registration.py::test_invalid_email",
+  "test/test_user_routes/test_user_registration.py::test_invalid_firstname",
+  "test/test_user_routes/test_user_registration.py::test_invalid_lastname",
+  "test/test_user_routes/test_user_registration.py::test_invalid_password",
+  "test/test_user_routes/test_user_registration.py::test_invalid_password_no_lowercase",
+  "test/test_user_routes/test_user_registration.py::test_invalid_password_no_uppercase",
+  "test/test_user_routes/test_user_registration.py::test_invalid_password_no_valid_char",
+  "test/test_user_routes/test_user_registration.py::test_invalid_password_too_short",
+  "test/test_user_routes/test_user_verification.py::test_invalid_id_provided",
+  "test/test_user_routes/test_user_verification.py::test_token_does_not_activate_user_twice",
+  "test/test_user_routes/test_user_verification.py::test_token_is_invalid",
+  "test/test_user_routes/test_user_verification.py::test_user_account_activation"
+]
