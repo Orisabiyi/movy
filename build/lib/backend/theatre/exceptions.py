@@ -1,0 +1,3 @@
+
+class NameAlreadyExist(ValueError):
+    ...
