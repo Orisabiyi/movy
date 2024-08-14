@@ -31,7 +31,7 @@ Mako==1.3.5
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
--e git+ssh://git@github.com/kelani-culture/movy.git@ebd5bb9deb851c839b27acb978c9e13f7ccfad0c#egg=movy&subdirectory=backend
+# -e git+ssh://git@github.com/kelani-culture/movy.git@ebd5bb9deb851c839b27acb978c9e13f7ccfad0c#egg=movy&subdirectory=backend
 packaging==24.1
 passlib==1.7.4
 pillow==10.4.0
