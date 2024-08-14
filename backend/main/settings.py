@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV_PATH = os.path.join(BASE_DIR, ".env")
+
 load_dotenv(dotenv_path=ENV_PATH)
 
 if os.getenv("TEST_DB") == "1":
@@ -32,6 +33,9 @@ DATABASE_DICT = {
     "PORT": PORT
 }
 
+TEST_DB=os.getenv("TEST_DB")
+
+MY_SSL_CERT=os.getenv("MY_SSL_CERT") or  ""
 # redis hosting platform
 REDIS_HOST=os.getenv("REDIS_HOST", "localhost")
 REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "")

@@ -5,7 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.orm import Session, sessionmaker, declarative_base
 
-from .settings import BASE_DIR, DATABASE_DICT, DEBUG
+from .settings import BASE_DIR, DATABASE_DICT, DEBUG, MY_SSL_CERT, TEST_DB
+from .ca_pem_decode import decode_cert
 
 DATABASE_URL = (
     f'mysql+pymysql://{DATABASE_DICT["USERNAME"]}:'
@@ -15,13 +16,13 @@ DATABASE_URL = (
 
 Base = declarative_base()
 
+
 ssl_args = {
     "ssl": {
         "sslmode": "REQUIRED",
         "ca": BASE_DIR / "main" / "ca.pem",
     }
 }
-
 
 class DB:
     def __init__(self):
@@ -33,6 +34,7 @@ class DB:
         if DEBUG:
             self._engine = create_engine(DATABASE_URL, echo=False)
         else:
+            print('SSS')
             self._engine = create_engine(
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
