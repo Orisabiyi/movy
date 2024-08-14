@@ -36,7 +36,8 @@ DATABASE_DICT = {
 REDIS_HOST=os.getenv("REDIS_HOST", "localhost")
 REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "")
 REDIS_PORT=int(os.getenv("REDIS_PORT", 6379))
-
+REDIS_USER=os.getenv("REDIS_USER", "")
+REDIS_URI=os.getenv("REDIS_URI", "")
 HOST_APP= "http://localhost:8000"
 
 
@@ -50,3 +51,5 @@ REFRESH_TOKEN_SECRET_KEY = os.getenv("REFRESH_TOKEN_SECRET_KEY") or "JokaPNHDNcQ
 # access token and refresh token in minute
 ACCESS_TOKEN_IN_MIN = int(os.getenv("ACCESS_TOKEN_IN_MIN", 1))
 REFRESH_TOKEN_IN_MIN = int(os.getenv("REFRESH_TOKEN_IN_MIN", 1440))
+
+DEBUG=os.getenv("DEBUG") == "1"
