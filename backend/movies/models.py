@@ -1,6 +1,6 @@
 import enum
 
-from backend.main.database import DB, Base
+from main.database import DB, Base
 from sqlalchemy import (
     Boolean,
     Column,

@@ -33,7 +33,6 @@ class DB:
         if DEBUG:
             self._engine = create_engine(DATABASE_URL, echo=False)
         else:
-            print('SSS')
             self._engine = create_engine(
                 DATABASE_URL, echo=False, connect_args=ssl_args
             )
