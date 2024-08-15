@@ -18,9 +18,9 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-
-
+    role = Column(String(50), default="user")
     tokens = relationship("UserToken", back_populates="user")
+
     @property
     def get_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
@@ -31,7 +31,6 @@ class User(Base):
     def get_context_string(self, context: str) -> bytes:
         from main import settings
         return f"{context}{self.password[-6]}{self.updated_at.strftime('%m%d%Y%H%M%S')}".encode()
-
 
 
 class UserToken(Base):
