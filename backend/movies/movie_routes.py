@@ -11,15 +11,15 @@ from sqlalchemy import func, text, select
 from sqlalchemy.orm import joinedload, subqueryload, aliased, contains_eager
 
 from .api_doc import movie_detail_response, movie_search
-from .schemas import MovieDetailSchema, MovieListSchemas
+from .schemas import MovieDetailSchema, MovieListSchemas, GenreList
 from main.m_db import REDIS_CLI
 
 
-router = APIRouter()
+router = APIRouter(prefix="/movies")
 
 
 @router.get(
-    "/movies/{movie_id}",
+    "/{movie_id}",
     response_model=MovieDetailSchema,
     tags=["MOVY LISTING"],
     response_description="endpoints for a detailed movie using id",
@@ -134,10 +134,16 @@ def search_movies(
 #     ...
 
 
-@router.get("/genres/")
-def get_movie_list_genres():
-    ...
-    # TODO return a list of genrers
+@router.get("/genres/", response_model=List[GenreList])
+def get_movie_list_genres(db: DB = Depends(get_db)):
+    query = db._session.query(Genre).all()
+    print("----------->")
+    genre_list = [
+        GenreList(**{"id": genre.id, "name": genre.name})
+        .model_dump()
+        for genre in query
+    ]
+    return JSONResponse(status_code=200, content=genre_list)
 
 
 # TODO filter by genrers

@@ -8,7 +8,7 @@ class MovieBaseSchema(BaseModel):
 
 
 class MovieListSchemas(MovieBaseSchema):
-    id: int
+    id: str
     title: str
     tagline: str
     runtime: str
@@ -36,7 +36,7 @@ class CustomPage(BaseModel, Generic[T]):
 
 
 class MovieDetailSchema(BaseModel):
-    id: int
+    id: str
     title: str
     description: str
     tag_line: str
