@@ -36,7 +36,7 @@ class CustomPage(BaseModel, Generic[T]):
 
 
 class MovieDetailSchema(BaseModel):
-    id: str
+    id: int
     title: str
     description: str
     tag_line: str
