@@ -15,7 +15,7 @@ from .email_context.context import (
     FORGOT_PASSWORD_CONTEXT,
     USER_VERIFICATION_ACCOUNT,
 )
-from .utils import (
+from .util_files import (
     _decode_token,
     _verify_hash_password,
     hash_password,

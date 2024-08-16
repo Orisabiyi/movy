@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks, FastAPI
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from main import settings
 from main.settings import BASE_DIR
-from .utils import _encode_token
+from .util_files import _encode_token
 
 from .auth import hash_password
 

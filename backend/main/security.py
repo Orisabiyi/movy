@@ -16,7 +16,7 @@ import jwt
 from . import settings
 
 from typing import Tuple, Dict
-from .utils import unique_string
+from .util_files import unique_string
 
 
 ALGORITHM = "HS256"
@@ -62,7 +62,7 @@ def generate_token_payload(payload: Dict, secret_key,expired_at: timedelta) -> s
 async def get_current_user_or_theatre(token: str, secret_key, klass):
     payload = get_token_payload(token, secret_key)
     if payload:
-        user = await load_user(klass, id=str_decode(payload.get('sub')))
+        user = await load_user(klass, id=str_decode(payload.get('sub'))) #type: ignore
         if user and user.id == str_decode(payload.get('sub')):
             return user
     return None
