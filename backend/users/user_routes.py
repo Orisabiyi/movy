@@ -13,7 +13,7 @@ from main import settings
 from main.auth import Auth
 from main.database import DB, get_db
 from main.security import set_cookie
-
+from main.decorators import PermissionDependency, login_required, Role
 from .models import User, UserToken
 from .open_apidoc import (
     forgot_password_response_doc,
@@ -51,12 +51,14 @@ async def signup(
     background_tasks: BackgroundTasks,
     db: DB = Depends(get_db),
 ):
+    u_data = data.model_dump()
+    u_data['check_against'] = "theatre"
     try:
         tokens, obj = await AUTH.register_user(
-            User, background_tasks, **data.model_dump()
+            User, background_tasks, **u_data
         )
     except ValueError:
-        message = {"message": "User with email already exists"}
+        message = {"message": "Email already exists"}
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
         )
@@ -67,8 +69,7 @@ async def signup(
         status_code=status.HTTP_201_CREATED,
     )
     # set user refresh token
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/signup")
-    set_cookie(resp, "access_token", tokens["access_token"])
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 
 
@@ -106,15 +107,15 @@ async def verify_user_token_email(
 async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
     tokens = await AUTH.get_login_token(data.model_dump(), User)
     resp = JSONResponse(content=tokens, status_code=200)
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/signup")
-    set_cookie(resp, "access_token", tokens["access_token"])
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 
 
 @router.post("/refresh", responses=refresh_response_doc)  # type: ignore
 async def refresh_token(
-    refresh_token: str = Header(...), db: DB = Depends(get_db)
+    request: Request, db: DB = Depends(get_db)
 ):
+    refresh_token = request.cookies.get("refresh_token") or ""
     return await AUTH.get_refresh_token(refresh_token)
 
 
@@ -155,3 +156,8 @@ async def reset_password_endpoint(
 
 
 # TODO oauth2 auth endpoint
+
+@router.get('/me')
+@login_required(User)
+async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.USER, User))):
+    return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})

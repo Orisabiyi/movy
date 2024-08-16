@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import logging
-from fastapi import HTTPException
+from fastapi import HTTPException,status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from .database import DB
@@ -38,12 +38,17 @@ def str_decode(string: str) -> str:
 # decode jwt token
 def get_token_payload(token: str, secret_key: str):
     payload = None
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, key=secret_key, algorithms=[ALGORITHM])
-    # except jwt.exceptions.DecodeError:
-    #     raise HTTPException(status_code=400, detail= {"message": "Invalid token provided or token expired"})
-    except Exception as jwt_except:
-        logging.debug(f"JWT Error {str(jwt_except)}")
+    except jwt.exceptions.DecodeError as e:
+        raise credentials_exception
+    except jwt.exceptions.ExpiredSignatureError:
+        raise credentials_exception
     return payload
 
 # generate jwt token
@@ -54,20 +59,20 @@ def generate_token_payload(payload: Dict, secret_key,expired_at: timedelta) -> s
 
 
 
-async def get_token_user(token: str, secret_key, klass):
+async def get_current_user_or_theatre(token: str, secret_key, klass):
     payload = get_token_payload(token, secret_key)
     if payload:
-        user = await load_user(int(str_decode(payload.get('sub'))), klass)
-        if user and user.id == int(payload.get('sub')):
+        user = await load_user(klass, id=str_decode(payload.get('sub')))
+        if user and user.id == str_decode(payload.get('sub')):
             return user
     return None
 
-async def load_user(uni, klass):
+async def load_user(klass, **kwargs):
     from sqlalchemy.exc import NoResultFound
     try:
-        user = db.get(klass, email=uni)
-    except NoResultFound:
-        logging.info(f"User not found, Email {uni}")
+        user = db.get(klass, **kwargs)
+    except NoResultFound as e:
+        logging.info(f"User not found {e}")
         user = None
 
     return user

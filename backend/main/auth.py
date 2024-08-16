@@ -37,6 +37,8 @@ class Auth:
         """
         register user account details
         """
+        user = None
+        obj = None
         try:
             user = self._db.get(klass, email=kwargs["email"])
             if user:
@@ -44,6 +46,14 @@ class Auth:
         except NoResultFound:
             pass
 
+        try:
+            obj =  self._db.get(Model[kwargs["check_against"]], email=kwargs["email"])
+            if obj:
+                raise ValueError("Email already exists")
+        except NoResultFound:
+            ...
+
+        del kwargs["check_against"]
         kwargs["password"] = hash_password(kwargs["password"])
         kwargs["updated_at"] = func.now()
         obj = self._db.add(klass, **kwargs)
@@ -100,7 +110,7 @@ class Auth:
         """
         from .security import load_user
 
-        obj = await load_user(data["email"], klass)
+        obj = await load_user(klass, email=data['email'])
         if not obj:
             raise HTTPException(
                 status_code=400,

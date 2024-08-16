@@ -29,6 +29,7 @@ async def signup_theatre(
         "description": t_data.pop("description"),
         "email": t_data.pop("email"),
         "password": t_data.pop("password"),
+        "check_against": "user"
     }
     try:
         tokens, obj = await THEATRE_AUTH.register_user(
@@ -41,7 +42,7 @@ async def signup_theatre(
     except ValueError:
         return JSONResponse(
             status_code=400,
-            content={"message": "User with email already exists", "status_code": 400},
+            content={"message": "Email already exists", "status_code": 400},
         )
     address = db.get_or_add(Address, **t_data, close=False)
     if address:
@@ -61,8 +62,7 @@ async def signup_theatre(
         status_code=status.HTTP_201_CREATED,
     )
     # set user refresh token
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/theatre/signup")
-    set_cookie(resp, "access_token", tokens["access_token"])
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 
 
@@ -80,11 +80,11 @@ async def verify_theatre_email(data: VeriifyTheatreAccount, background_tasks: Ba
 async def login_theatre(data: TheatreLogin, db: DB = Depends(get_db)):
     tokens = await THEATRE_AUTH.get_login_token(data.model_dump(), Theatre)
     resp = JSONResponse(content=tokens, status_code=200)
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/theatre/signup")
-    set_cookie(resp, "access_token", tokens["access_token"])
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 
 
 @router.post('/refresh')
-async def theatre_refresh_token(refresh_token: str = Header(...), db: DB = Depends(get_db)):
+async def theatre_refresh_token(request: Request, db: DB = Depends(get_db)):
+    refresh_token = request.cookies.get("refresh_token") or ""
     return await THEATRE_AUTH.get_refresh_token(refresh_token)

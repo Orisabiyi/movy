@@ -1,3 +1,4 @@
+import uuid
 from main.database import Base
 from sqlalchemy import Column, Integer, String, Boolean, func, DateTime, ForeignKey, Table, Enum as SQLAEnum
 from cryptography.fernet import Fernet
@@ -8,11 +9,12 @@ from sqlalchemy.orm import relationship, backref, mapped_column
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, autoincrement=True, primary_key=True)
+    id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     password = Column(String(500), nullable=False)
+    role = Column(String(10), default="user", nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     is_verified = Column(Boolean, default=False)
