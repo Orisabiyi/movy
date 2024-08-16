@@ -40,6 +40,7 @@ class Theatre(Base):
     updated_at = Column(DateTime, onupdate=func.now())
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    role = Column(String(50), default="theatre")
     tokens = relationship("TheatreToken", back_populates="theatre")
 
     @property

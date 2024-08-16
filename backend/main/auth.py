@@ -9,6 +9,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 from theatre.models import Theatre, TheatreToken
 from users.models import UserToken
+from users.models  import User
 
 from .email_context.context import (
     FORGOT_PASSWORD_CONTEXT,
@@ -22,7 +23,7 @@ from .utils import (
 )
 
 TokeModel = {"user": UserToken, "theatre": TheatreToken}
-
+Model = {"theatre": Theatre, "user": User}
 
 class Auth:
     def __init__(self):
@@ -304,7 +305,6 @@ class Auth:
             "name": user.get_name,
             "roles": [type],
         }
-
         rt_expires_at = timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN)
         refresh_token = generate_token_payload(
             rt_data, settings.REFRESH_TOKEN_SECRET_KEY, rt_expires_at

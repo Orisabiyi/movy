@@ -83,8 +83,6 @@ async def login_theatre(data: TheatreLogin, db: DB = Depends(get_db)):
     set_cookie(resp, "refresh_token", tokens["refresh_token"], "/auth/theatre/signup")
     set_cookie(resp, "access_token", tokens["access_token"])
     return resp
-    
-
 
 
 @router.post('/refresh')
