@@ -1,7 +1,0 @@
-{
-  "test/test_user_routes/test_user_login.py::test_user_login": true,
-  "test/test_user_routes/test_user_login.py::test_user_login_wrong_password": true,
-  "test/test_user_routes/test_user_verification.py::test_user_account_activation": true,
-  "test/test_user_routes/test_user_registration.py::test_create_user": true,
-  "test/test_user_routes/test_user_registration.py::test_invalid_email": true
-}

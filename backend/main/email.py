@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks, FastAPI
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from main import settings
 from main.settings import BASE_DIR
-from .utils import _encode_token
+from .util_files import _encode_token
 
 from .auth import hash_password
 
@@ -107,7 +107,7 @@ async def reset_password_email(
     from main import settings
     from datetime import datetime
     string_context = obj.get_context_string(context=context)
-    token = _encode_token(string_context)
+    token = _encode_token(hash_password(string_context).encode())
     email = _encode_token(obj.email.encode())
     reset_password_url = (
         f"{settings.HOST_APP}/auth/password-reset?token={token}&id={email}"

@@ -1,4 +1,0 @@
-{
-  "backend/test/test_user_routes/test_user_registration.py": true,
-  "backend/test": true
-}

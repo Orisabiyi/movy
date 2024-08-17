@@ -17,6 +17,7 @@ from sqlalchemy import (
     Date
 )
 from users.models import User
+import uuid
 from sqlalchemy.orm import relationship, backref, mapped_column
 
 
@@ -31,15 +32,17 @@ theatre_address = Table(
 
 class Theatre(Base):
     __tablename__ = "theatre"
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     name = Column(String(100), nullable=False, unique=True)
     password = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
+    role = Column(String(10), default="theatre_owner", nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    role = Column(String(50), default="theatre")
     tokens = relationship("TheatreToken", back_populates="theatre")
 
     @property
@@ -75,8 +78,8 @@ class TheatreReviewRating(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     review = Column(Text)
     rating = Column(Integer)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    theatre_id = Column(Integer, ForeignKey("theatre.id"))
+    user_id = Column(String(50), ForeignKey("users.id"))
+    theatre_id = Column(String(50), ForeignKey("theatre.id"))
     users = relationship(User, backref="reviews")
     theatre = relationship(Theatre, backref="reviews")
 
@@ -87,7 +90,7 @@ class ShowTime(Base):
     time = Column(Time, nullable=False)
     date =  Column(Date, nullable=False)
     movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
-    theatre_id = Column(Integer, ForeignKey("theatre.id"), nullable=False)
+    theatre_id = Column(String(50), ForeignKey("theatre.id"), nullable=False)
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
