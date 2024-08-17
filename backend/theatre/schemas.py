@@ -30,6 +30,23 @@ class TheatreLoginResponse(BaseModel):
     refresh_token: str
     expires_at: int
 
-class VeriifyTheatreAccount(BaseModel):
+class VerifyTheatreAccount(BaseModel):
     id: str
     token: str
+
+class ForgotPassWordSchema(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    status_code: int
+
+
+class ResetPasswordSchema(BaseModel):
+    id: str
+    token: str
+    password: str
+
+class ResetPasswordResponseSchema(ForgotPasswordResponse):
+   ... 

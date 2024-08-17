@@ -8,8 +8,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import joinedload
 from theatre.models import Theatre, TheatreToken
-from users.models import UserToken
-from users.models  import User
+from users.models import User, UserToken
 
 from .email_context.context import (
     FORGOT_PASSWORD_CONTEXT,
@@ -24,6 +23,7 @@ from .util_files import (
 
 TokeModel = {"user": UserToken, "theatre": TheatreToken}
 Model = {"theatre": Theatre, "user": User}
+
 
 class Auth:
     def __init__(self):
@@ -47,7 +47,9 @@ class Auth:
             pass
 
         try:
-            obj =  self._db.get(Model[kwargs["check_against"]], email=kwargs["email"])
+            obj = self._db.get(
+                Model[kwargs["check_against"]], email=kwargs["email"]
+            )
             if obj:
                 raise ValueError("Email already exists")
         except NoResultFound:
@@ -110,16 +112,8 @@ class Auth:
         """
         from .security import load_user
 
-        obj = await load_user(klass, email=data['email'])
-        if not obj:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "message": "Invalid email or password",
-                    "status_code": 400,
-                },
-            )
-        if not _verify_hash_password(data["password"], obj.password):
+        obj = await load_user(klass, email=data["email"])
+        if not obj or not _verify_hash_password(data["password"], obj.password):
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -197,22 +191,24 @@ class Auth:
         self._db._session.refresh(user_token)
         return self._generate_token(user_token.user, "user")
 
-    async def forgot_password_(self, data, background_tasks: BackgroundTasks):
+    async def forgot_password(
+        self, klass, data, background_tasks: BackgroundTasks
+    ):
         """
         handle user forgot password request
         """
-        from users.models import User
+        # from users.models import User
 
         from .email import reset_password_email
 
         try:
-            user = self._db.get(User, email=data.email)
+            user = self._db.get(klass, email=data.email)
         except NoResultFound:
             raise HTTPException(
                 status_code=404,
                 detail={
                     "message": "Email does not exists",
-                    "status_code": 400,
+                    "status_code": 404,
                 },
             )
 
@@ -224,7 +220,6 @@ class Auth:
                     "status_code": 400,
                 },
             )
-
         if not user.is_verified:
             raise HTTPException(
                 status_code=400,
@@ -324,4 +319,3 @@ class Auth:
             "refresh_token": refresh_token,
             "expires_at": expires_at.seconds,
         }
-

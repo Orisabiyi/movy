@@ -133,7 +133,7 @@ async def forgot_password_endpoint(
     background_tasks: BackgroundTasks,
     db: DB = Depends(get_db),
 ):
-    await AUTH.forgot_password_(data, background_tasks)
+    await AUTH.forgot_password(User, data, background_tasks) #type: ignore
     return JSONResponse(
         content={
             "messaage": "Check your mail for reset password link",

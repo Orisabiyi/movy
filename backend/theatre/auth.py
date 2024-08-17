@@ -17,7 +17,7 @@ class TheatreAuth(Auth):
                 raise NameAlreadyExist()
         except NoResultFound:
             pass
-        return await super().register_user(klass, background_tasks, **kwargs)
+        return await super().register_user(klass, background_tasks, **kwargs) #type ignore
 
     async def get_refresh_token(self, refresh_token: str):
         """

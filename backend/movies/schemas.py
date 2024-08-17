@@ -8,7 +8,7 @@ class MovieBaseSchema(BaseModel):
 
 
 class MovieListSchemas(MovieBaseSchema):
-    id: str
+    id: int
     title: str
     tagline: str
     runtime: str
