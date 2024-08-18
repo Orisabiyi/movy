@@ -121,7 +121,6 @@ async def theatre_refresh_token(request: Request, db: DB = Depends(get_db)):
     return await THEATRE_AUTH.get_refresh_token(refresh_token)
 
 
-# TODO implement forget-password
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
 async def theatre_forgot_password(
     data: ForgotPassWordSchema,

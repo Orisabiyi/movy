@@ -87,7 +87,8 @@ class TheatreReviewRating(Base):
 class ShowTime(Base):
     __tablename__ = "show_time"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    time = Column(Time, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
     date =  Column(Date, nullable=False)
     movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
     theatre_id = Column(String(50), ForeignKey("theatre.id"), nullable=False)
@@ -107,3 +108,28 @@ class TheatreToken(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     theatre = relationship("Theatre", back_populates="tokens")
+
+
+class Screen(Base):
+    __tablename__ = "screen"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    screen_name = Column(String(50), nullable=False)
+    capacity = Column(Integer, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    theatre_id = mapped_column(ForeignKey("theatre.id"))
+    theatre = relationship(Theatre, backref="screen")
+    seats = relationship("Screen", back_populates="screen")
+
+
+class Seat(Base):
+    __tablename__ = "seat"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    screen_id = mapped_column(ForeignKey("screen.id"))
+    row = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    seat = Column(Integer, nullable=False)
+    is_available = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    screen = relationship("Screen", back_populates="seats")

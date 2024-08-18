@@ -1,5 +1,7 @@
+from datetime import date, time
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+
 
 
 
@@ -50,3 +52,13 @@ class ResetPasswordSchema(BaseModel):
 
 class ResetPasswordResponseSchema(ForgotPasswordResponse):
    ... 
+
+
+
+class CreateShowTime(BaseModel):
+    time: time
+    date: date
+    movie_id: int
+
+class CreateShowTimeResponse(BaseModel):
+    ...
