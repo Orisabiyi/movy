@@ -17,13 +17,12 @@ from .models import Cast, Genre, Movie, movie_cast, movie_genre
 from .schemas import GenreList, MovieDetailSchema, MovieListSchemas
 from .utils import movie_schema_list
 
-router = APIRouter(prefix="/movies")
+router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 
 
 @router.get(
     "/{movie_id}",
     response_model=MovieDetailSchema,
-    tags=["MOVY LISTING"],
     response_description="endpoints for a detailed movie using id",
     responses=movie_detail_response,  # type: ignore
 )
@@ -87,7 +86,6 @@ def get_movie_detail(movie_id: int, db: DB = Depends(get_db)):
 
 @router.get(
     "/search/",
-    tags=["MOVY LISTING"],
     response_model=List[MovieListSchemas],
     responses=movie_search,  # type: ignore
 )
