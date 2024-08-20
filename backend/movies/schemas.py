@@ -14,6 +14,7 @@ class MovieListSchemas(MovieBaseSchema):
     runtime: str
     release_date: str
     poster_path: str
+    description: str
     url: str
     class config:
         from_attributes = True

@@ -121,7 +121,6 @@ async def theatre_refresh_token(request: Request, db: DB = Depends(get_db)):
     return await THEATRE_AUTH.get_refresh_token(refresh_token)
 
 
-# TODO implement forget-password
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
 async def theatre_forgot_password(
     data: ForgotPassWordSchema,
@@ -148,7 +147,7 @@ async def theatre_reset_password(
         status_code=200,
     )
 
-@router.get('/me')
-@login_required(Theatre)
-async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.THEATRE, Theatre))):
-    return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})
+# @router.get('/me')
+# @login_required(Theatre)
+# async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.THEATRE, Theatre))):
+#     return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})

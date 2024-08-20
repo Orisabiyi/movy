@@ -58,7 +58,6 @@ class Theatre(Base):
         return self.name
 
     address = relationship("Address", secondary=theatre_address, back_populates="theatres")
-    show_times = relationship("ShowTime", back_populates="theatre") 
 
 class Address(Base):
     __tablename__ = "address"
@@ -86,15 +85,17 @@ class TheatreReviewRating(Base):
 
 class ShowTime(Base):
     __tablename__ = "show_time"
+    from .theatre_management.models import Screen
     id = Column(Integer, primary_key=True, autoincrement=True)
-    time = Column(Time, nullable=False)
+    start_movie_time = Column(Time, nullable=False)
+    end_movie_time = Column(Time, nullable=False)
     date =  Column(Date, nullable=False)
-    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
-    theatre_id = Column(String(50), ForeignKey("theatre.id"), nullable=False)
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
-    theatre = relationship(Theatre, back_populates="show_times") 
+    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
+    screen_id = mapped_column(ForeignKey("screen.id"))
+    screen = relationship(Screen, backref="show_times")
     movies = relationship("Movie", back_populates="show_times") 
 
 
@@ -107,3 +108,5 @@ class TheatreToken(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     theatre = relationship("Theatre", back_populates="tokens")
+
+

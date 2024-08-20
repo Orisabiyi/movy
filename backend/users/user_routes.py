@@ -157,7 +157,7 @@ async def reset_password_endpoint(
 
 # TODO oauth2 auth endpoint
 
-@router.get('/me')
-@login_required(User)
-async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.USER, User))):
-    return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})
+# @router.get('/me')
+# @login_required(User)
+# async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.USER, User))):
+#     return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})
