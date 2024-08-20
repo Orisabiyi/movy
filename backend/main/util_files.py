@@ -38,6 +38,7 @@ def movie_schema_list(request: Request, movies: List[Movie]):
                 "id": movie.id,
                 "title": movie.title,
                 "tagline": movie.tag_line,
+                "description": movie.description,
                 "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",
                 "release_date": str(movie.release_date),
                 "poster_path": movie.poster_path,

@@ -12,6 +12,7 @@ from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
 from sqlalchemy import desc
 from .database import DB, get_db
+from .util_files import movie_schema_list
 
 app = FastAPI(
     title="Movy API",
@@ -59,7 +60,7 @@ def get_all_movies(
         movies_query = (
             db._session.query(Movie).order_by(desc(Movie.release_date)).all()
         )
-        m_list = list_movies(request, movies_query) #type: ignore
+        m_list = movie_schema_list(request, movies_query)
         # fetch the data from caching
         value_set = REDIS_CLI.set(
             "movie_list_value",
@@ -82,11 +83,11 @@ add_pagination(app)
 from movies import movie_routes
 from theatre import theater_routes
 from users import user_routes
-
+from theatre.theatre_management import showtime_routers
 app.include_router(movie_routes.router)
 app.include_router(user_routes.router)
 app.include_router(theater_routes.router)
-
+app.include_router(showtime_routers.router)
 
 async def custom_validation_exception_handler(
     request: Request, exc: RequestValidationError
@@ -118,9 +119,9 @@ def custom_openapi():
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title="Custom Validation Error Example",
-        version="1.0.0",
-        description="This is a custom validation error response format",
+        title="Movy Booking API",
+        version="1.0",
+        description="This is the documentation for the MOVY booking API",
         routes=app.routes,
     )
 

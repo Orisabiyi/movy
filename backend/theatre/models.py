@@ -58,7 +58,6 @@ class Theatre(Base):
         return self.name
 
     address = relationship("Address", secondary=theatre_address, back_populates="theatres")
-    show_times = relationship("ShowTime", back_populates="theatre") 
 
 class Address(Base):
     __tablename__ = "address"
@@ -86,16 +85,17 @@ class TheatreReviewRating(Base):
 
 class ShowTime(Base):
     __tablename__ = "show_time"
+    from .theatre_management.models import Screen
     id = Column(Integer, primary_key=True, autoincrement=True)
-    start_time = Column(Time, nullable=False)
-    end_time = Column(Time, nullable=False)
+    start_movie_time = Column(Time, nullable=False)
+    end_movie_time = Column(Time, nullable=False)
     date =  Column(Date, nullable=False)
-    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
-    theatre_id = Column(String(50), ForeignKey("theatre.id"), nullable=False)
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
-    theatre = relationship(Theatre, back_populates="show_times") 
+    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)
+    screen_id = mapped_column(ForeignKey("screen.id"))
+    screen = relationship(Screen, backref="show_times")
     movies = relationship("Movie", back_populates="show_times") 
 
 
@@ -110,26 +110,3 @@ class TheatreToken(Base):
     theatre = relationship("Theatre", back_populates="tokens")
 
 
-class Screen(Base):
-    __tablename__ = "screen"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    screen_name = Column(String(50), nullable=False)
-    capacity = Column(Integer, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-    theatre_id = mapped_column(ForeignKey("theatre.id"))
-    theatre = relationship(Theatre, backref="screen")
-    seats = relationship("Screen", back_populates="screen")
-
-
-class Seat(Base):
-    __tablename__ = "seat"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    screen_id = mapped_column(ForeignKey("screen.id"))
-    row = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    seat = Column(Integer, nullable=False)
-    is_available = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    screen = relationship("Screen", back_populates="seats")

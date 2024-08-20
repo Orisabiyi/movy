@@ -179,13 +179,13 @@ def filter_movies_by_genres(
 
 
 #TODO filter by date
-@router.get("/date")
-def filter_movies_by_year(
-    year: int = Query(...),
-    month: str = Query(None),
-    day: str = Query(None),
-    db: DB = Depends(get_db),
-): ...
+# @router.get("/date")
+# def filter_movies_by_year(
+#     year: int = Query(...),
+#     month: str = Query(None),
+#     day: str = Query(None),
+#     db: DB = Depends(get_db),
+# ): ...
 
 
 # TODO filter movie by theatre show time

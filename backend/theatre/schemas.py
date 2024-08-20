@@ -55,10 +55,6 @@ class ResetPasswordResponseSchema(ForgotPasswordResponse):
 
 
 
-class CreateShowTime(BaseModel):
-    time: time
-    date: date
-    movie_id: int
-
 class CreateShowTimeResponse(BaseModel):
     ...
+
