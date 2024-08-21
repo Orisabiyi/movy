@@ -4,17 +4,15 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum,
-    Float,
     ForeignKey,
-    Index,
     Integer,
     String,
     Table,
     Text,
     func,
     Time,
-    Date
+    Date,
+    Numeric,
 )
 from users.models import User
 import uuid
@@ -90,7 +88,7 @@ class ShowTime(Base):
     start_movie_time = Column(Time, nullable=False)
     end_movie_time = Column(Time, nullable=False)
     date =  Column(Date, nullable=False)
-
+    price = Column(Numeric(precision=10, scale=2), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)

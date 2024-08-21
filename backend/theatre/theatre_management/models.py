@@ -10,7 +10,7 @@ class Screen(Base):
     capacity = Column(Integer, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
-    theatre_id = mapped_column(ForeignKey("theatre.id"))
+    theatre_id = mapped_column(ForeignKey("theatre.id"), nullable=False)
     theatre = relationship(Theatre, backref="screen")
     seats = relationship("Seat", back_populates="screen")
 
@@ -18,7 +18,7 @@ class Screen(Base):
 class Seat(Base):
     __tablename__ = "seat"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    screen_id = mapped_column(ForeignKey("screen.id"))
+    screen_id = mapped_column(ForeignKey("screen.id"), nullable=False)
     row = Column(String(1), nullable=False)
     seat_number = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)

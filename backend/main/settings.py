@@ -57,3 +57,5 @@ ACCESS_TOKEN_IN_MIN = int(os.getenv("ACCESS_TOKEN_IN_MIN", 1))
 REFRESH_TOKEN_IN_MIN = int(os.getenv("REFRESH_TOKEN_IN_MIN", 1440))
 
 DEBUG=os.getenv("DEBUG") == "1"
+
+HASH_ID_SALT=os.getenv("HASHID_SALT") or "vnn1kn123fnnvknvei1;[]123!fekf"

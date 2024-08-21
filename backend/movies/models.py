@@ -1,6 +1,7 @@
 import enum
 
 from main.database import DB, Base
+from main.hash_id import encode_id
 from sqlalchemy import (
     Boolean,
     Column,
@@ -70,7 +71,7 @@ class Movie(Base):
 
     @property
     def get_path(self):
-        return f"movies/{self.id}"
+        return f"movies/{encode_id(self.id)}"
 
 
     __table_args__ = (

@@ -8,6 +8,8 @@ from movies.models import Movie
 from movies.schemas import MovieListSchemas
 from passlib.hash import argon2
 
+from .hash_id import encode_id
+
 cypher_token = Fernet(settings.KEY)
 
 
@@ -32,10 +34,11 @@ def _encode_token(encrypt_text: bytes) -> str:
 
 
 def movie_schema_list(request: Request, movies: List[Movie]):
+    print(type(encode_id(movies[0].id)), "--------------------->")
     m_list = [
         MovieListSchemas(
             **{
-                "id": movie.id,
+                "id": encode_id(movie.id),
                 "title": movie.title,
                 "tagline": movie.tag_line,
                 "description": movie.description,
