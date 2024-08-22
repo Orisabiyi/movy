@@ -26,6 +26,10 @@ class CreateShow(BaseModel):
             return datetime.strptime(value, "%H:%M").time()
         return value
 
+    # @field_validator("screen_name")
+    # def unique_screen_name(cls, vallue):
+    #     ...
+
 class MovieList(BaseModel):
     id: int
     title: str

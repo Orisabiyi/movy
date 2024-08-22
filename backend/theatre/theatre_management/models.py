@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, String, func, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, DateTime, String, func, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import mapped_column, relationship
 from theatre.models import Theatre
 from main.database import Base
@@ -14,6 +14,7 @@ class Screen(Base):
     theatre = relationship(Theatre, backref="screen")
     seats = relationship("Seat", back_populates="screen")
 
+    __table_args__ = (UniqueConstraint("screen_name", "theatre_id", name="uniq_theatre_screen_name"),)
 
 class Seat(Base):
     __tablename__ = "seat"

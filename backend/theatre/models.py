@@ -13,6 +13,7 @@ from sqlalchemy import (
     Time,
     Date,
     Numeric,
+    UniqueConstraint,
 )
 from users.models import User
 import uuid
