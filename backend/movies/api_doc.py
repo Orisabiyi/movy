@@ -128,3 +128,50 @@ movie_search = {
         },
     },
 }
+
+get_movie_by_theatre= {
+        200: {
+            "description": "Successful response with detailed movie information",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "movie_id": "abcd1234",  # Example of a hashid
+                        "title": "Example Movie",
+                        "theatres": [
+                            {
+                                "theatre_id": "1",
+                                "theatre_name": "Cineplex",
+                                "screens": [
+                                    {
+                                        "screen_id": "101",
+                                        "screen_name": "Screen 1",
+                                        "seats": [
+                                            {"id": 1, "row": "A", "seat_number": 1, "is_available": True},
+                                            {"id": 2, "row": "A", "seat_number": 2, "is_available": False}
+                                        ],
+                                        "showtimes": [
+                                            {
+                                                "showtime_id": "1",
+                                                "date": "2024-08-22",
+                                                "movie_start_time": "19:00:00",
+                                                "movie_end_time": "21:00:00",
+                                                "price": 12.5
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"message": "Movie with this id not found"}
+                }
+            }
+        }
+}

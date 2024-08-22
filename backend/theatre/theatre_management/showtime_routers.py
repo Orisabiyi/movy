@@ -12,12 +12,9 @@ from .models import Screen, Seat
 from .schemas import CreateShow, MovieList
 from .utils import generate_seats
 
-router = APIRouter(prefix="/theatre/admin", tags=["THEATRE MANAGEMENT"])
+router = APIRouter(prefix="/theatre/admin", tags=["THEATRE ADMIN"])
 
 
-t_permission = Annotated[
-    PermissionDependency, Depends(PermissionDependency(Role.THEATRE, Theatre))
-]
 
 
 @router.get("/movie-list", response_model=List[MovieList])
@@ -47,8 +44,8 @@ async def theatre_movie_streams(
     """
     theatre create shows
     """
-    # print(t_perm)
     t_perm = db._session.merge(t_perm)
+    
     movie = db.get(Movie, id=data.movie_id)
     screen = Screen(screen_name=data.screen_name, capacity=data.capacity)
     db._session.add(screen)

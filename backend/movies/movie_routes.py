@@ -1,23 +1,29 @@
 import json
+from decimal import Decimal
 from typing import List
 
 import requests
-from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, login_required
-from main.hash_id import decode_id
-from main.hash_id import encode_id
+from main.hash_id import decode_id, encode_id
 from main.m_db import REDIS_CLI
 from sqlalchemy import func, select, text
-from sqlalchemy.orm import aliased, contains_eager, joinedload
 from sqlalchemy.future import select
-from .api_doc import movie_detail_response, movie_search
-from .models import Cast, Genre, Movie, movie_cast, movie_genre
-from .schemas import GenreList, MovieDetailSchema, MovieListSchemas, MovieTheatreSchema
+from sqlalchemy.orm import aliased, contains_eager, joinedload
 from theatre.models import ShowTime, Theatre
 from theatre.theatre_management.models import Screen, Seat
+
+from .api_doc import movie_detail_response, movie_search, get_movie_by_theatre
+from .models import Cast, Genre, Movie, movie_cast, movie_genre
+from .schemas import (
+    GenreList,
+    MovieDetailSchema,
+    MovieListSchemas,
+    MovieTheatreSchema,
+)
+
 # from users.models import User
 from .utils import movie_schema_list
 
@@ -27,17 +33,19 @@ router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 @router.get(
     "/{movie_id}",
     response_model=MovieDetailSchema,
-    response_description="endpoints for a detailed movie using id",
+    response_description="Endpoints for a detailed movie using ID",
     responses=movie_detail_response,  # type: ignore
 )
 def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
 
-    # get value from redis
+    # Decode the movie ID
     movie_id: int = decode_id(movie_id)
-    print(movie_id)
+
+    # Try fetching the movie details from Redis
     get_movie = REDIS_CLI.get(f"movie_{movie_id}")  # type: ignore
     if not get_movie:
         CastAlias = aliased(Cast)
+
         # Subquery to get limited cast IDs for the movie
         limited_casts_subquery = (
             select(movie_cast.c.cast_id)
@@ -45,26 +53,25 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
             .limit(10)
             .subquery()
         )
-        # Main query to fetch the movie with limited cast details
-        movie_with_limited_casts = (
+
+        # Main query to fetch the movie with limited cast details (using outerjoin to make cast retrieval optional)
+        movie = (
             db._session.query(Movie)
-            .join(movie_cast, Movie.id == movie_cast.c.movie_id)
-            .join(Cast, movie_cast.c.cast_id == Cast.id)
+            .outerjoin(movie_cast, Movie.id == movie_cast.c.movie_id)
+            .outerjoin(Cast, movie_cast.c.cast_id == Cast.id)
             .filter(Movie.id == movie_id)
-            .filter(
-                Cast.id.in_(select(limited_casts_subquery.c.cast_id))
-            )  # Ensure only the limited cast IDs are used
             .options(contains_eager(Movie.movie_casts))
-            .all()
+            # .first()
         )
-        if not movie_with_limited_casts:
+
+        if not movie:
             return JSONResponse(
                 status_code=404,
-                content={"message": "Movie with this id not found"},
+                content={"message": "Movie with this ID not found"},
             )
-        # Extract and print cast details
-        movie_dict = {}
-        for movie in movie_with_limited_casts:
+
+        # Prepare the movie details
+        for movie in movie:
             movie_dict = {
                 "id": encode_id(movie.id),
                 "title": movie.title,
@@ -76,18 +83,24 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
                 "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",
                 "release_date": str(movie.release_date),
                 "genres": [genre.name for genre in movie.movie_genres],
-                "starring": [
-                    {"poster_path": cast.profile_path, "name": cast.name}
-                    for cast in movie.movie_casts
-                ],
+                "starring": (
+                    [
+                        {"poster_path": cast.profile_path, "name": cast.name}
+                        for cast in movie.movie_casts
+                    ]
+                    if movie.movie_casts
+                    else []
+                ),  # Ensure an empty list if no cast members are present
             }
-        print(movie_dict)
-        # add the data to the redis server
+
+        # Add the data to Redis
         data = MovieDetailSchema(**movie_dict)
         REDIS_CLI.set(f"movie_{movie_id}", data.model_dump_json())
     else:
-
+        # Load the movie data from Redis if it was cached
         data = MovieDetailSchema(**json.loads(get_movie.decode("UTF-8")))  # type: ignore
+
+    # Return the movie details
     return JSONResponse(content=data.model_dump(), status_code=200)
 
 
@@ -119,7 +132,6 @@ def search_movies(
             },
             status_code=404,
         )
-
     movie_lst = [
         MovieListSchemas(
             **{
@@ -143,7 +155,9 @@ def search_movies(
 #     ...
 
 
-@router.get("/genres/", response_model=List[GenreList])
+@router.get(
+    "/genres/", response_model=List[GenreList], summary="list all moie genres"
+)
 def get_movie_list_genres(db: DB = Depends(get_db)):
     query = db._session.query(Genre).all()
     genre_list = [
@@ -153,7 +167,9 @@ def get_movie_list_genres(db: DB = Depends(get_db)):
     return JSONResponse(status_code=200, content=genre_list)
 
 
-@router.get("/", response_model=MovieListSchemas)
+@router.get(
+    "/", response_model=MovieListSchemas, summary="filter movie by genre"
+)
 def filter_movies_by_genres(
     request: Request,
     genre: str = Query(..., description="get movie all movies by genres"),
@@ -181,26 +197,35 @@ def filter_movies_by_genres(
     return JSONResponse(status_code=200, content=movie_list)
 
 
-@router.get("/{movie_id}/theatre", status_code=200)#, response_model=MovieTheatreSchema)
-def get_theatres_streaming_movie(movie_id: int, db: DB = Depends(get_db)):
+@router.get(
+    "/{movie_id}/theatre",
+    status_code=200,
+    summary="Get theatres showing the movie",
+    description="Detailed information about theatres showing a movie.",
+    responses=get_movie_by_theatre,
+)
+def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     """
     get all theatres that are streaming the movies
     """
-    # movie_id = decode_id(movie_id)
+    movie_id = decode_id(movie_id)
     movie = (
         db._session.query(Movie)
         .options(
             joinedload(Movie.show_times)
             .joinedload(ShowTime.screen)
-            .joinedload(Screen.theatre) 
+            .joinedload(Screen.theatre)
         )
         .filter(Movie.id == movie_id)
         .first()
     )
+
+    if not movie:
+        return JSONResponse(content={"theatres": []}, status_code=400)
     movie_data = {
         "movie_id": encode_id(movie.id),
         "title": movie.title,
-        "theatres": []
+        "theatres": [],
     }
 
     theatres_dict = {}
@@ -212,10 +237,17 @@ def get_theatres_streaming_movie(movie_id: int, db: DB = Depends(get_db)):
             theatres_dict[theatre.id] = {
                 "theatre_id": theatre.id,
                 "theatre_name": theatre.name,
-                "screens": []
+                "screens": [],
             }
 
-        screen_dict = next((s for s in theatres_dict[theatre.id]["screens"] if s["screen_id"] == encode_id(screen.id)), None)
+        screen_dict = next(
+            (
+                s
+                for s in theatres_dict[theatre.id]["screens"]
+                if s["screen_id"] == encode_id(screen.id)
+            ),
+            None,
+        )
         if not screen_dict:
             screen_dict = {
                 "screen_id": encode_id(screen.id),
@@ -225,24 +257,26 @@ def get_theatres_streaming_movie(movie_id: int, db: DB = Depends(get_db)):
                         "seat_id": encode_id(seat.id),
                         "row": seat.row,
                         "seat_number": seat.seat_number,
-                        "is_available": seat.is_available
+                        "is_available": seat.is_available,
                     }
                     for seat in screen.seats
                 ],
-                "showtimes": []
+                "showtimes": [],
             }
             theatres_dict[theatre.id]["screens"].append(screen_dict)
 
-        screen_dict["showtimes"].append({
-            "showtime_id": encode_id(showtime.id),
-            "movie_date": showtime.date,  # Format datetime
-            "movie_start_time": showtime.start_movie_time,
-            "movie_end_time": showtime.end_movie_time,
-            "price": showtime.price # Convert Decimal to float
-        })
+        screen_dict["showtimes"].append(
+            {
+                "showtime_id": encode_id(showtime.id),
+                "movie_date": showtime.date,  # Format datetime
+                "movie_start_time": showtime.start_movie_time,
+                "movie_end_time": showtime.end_movie_time,
+                "price": showtime.price,  # Convert Decimal to float
+            }
+        )
 
-    movie_data["theatres"] = list(theatres_dict.values()) 
-    
+    movie_data["theatres"] = list(theatres_dict.values())
+
     return movie_data
 
 

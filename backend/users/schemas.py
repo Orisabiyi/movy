@@ -90,6 +90,8 @@ class UserLoginInSchema(BaseModel):
     password: str
 
 class LoginResponseSchema(BaseModel):
+    id: str
+    name: str
     access_token: str
     refresh_token: str
     expires_at: int

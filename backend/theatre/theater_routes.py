@@ -95,22 +95,31 @@ async def verify_theatre_email(
     """
     verify user theatre email account
     """
-    user_verified = await THEATRE_AUTH.token_verification(
+    token, obj = await THEATRE_AUTH.token_verification(
         Theatre, background_tasks, **data.model_dump()
     )
-    if user_verified:
-        return JSONResponse(
-            content={
-                "message": "User successfully verified",
-                "status_code": 200,
-            }
-        )
+    data = {
+        "id": obj.id,
+        "name": obj.get_name,
+        "refresh_token": token["refresh_token"],
+        "access_token": token["access_token"],
+    }
+    resp = JSONResponse(content=data, status_code=200)
+    set_cookie(resp, "refresh_token", token["refresh_token"], "/")
+    return resp
+    
 
 
 @router.post("/login")
 async def login_theatre(data: TheatreLogin, db: DB = Depends(get_db)):
-    tokens = await THEATRE_AUTH.get_login_token(data.model_dump(), Theatre)
-    resp = JSONResponse(content=tokens, status_code=200)
+    tokens, obj = await THEATRE_AUTH.get_login_token(data.model_dump(), Theatre)
+    data = {
+        "id": obj.id,
+        "name": obj.get_name,
+        "refresh_token": tokens["refresh_token"],
+        "access_token": tokens["access_token"],
+    }
+    resp = JSONResponse(content=data, status_code=200)
     set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 

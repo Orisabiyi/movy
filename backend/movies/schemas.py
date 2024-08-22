@@ -62,7 +62,7 @@ class SeatResponse(BaseModel):
     is_available: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ShowTimeSchema(BaseModel):
@@ -85,7 +85,7 @@ class ScreenSchema(BaseModel):
         from_attributes = True
 
 class TheatreSchema(BaseModel):
-    theatre_id: int
+    theatre_id: str
     theatre_name: str
     screens: List[ScreenSchema]
 
@@ -93,7 +93,7 @@ class TheatreSchema(BaseModel):
         from_attributes = True
 
 class MovieTheatreSchema(BaseModel):
-    movie_id: int
+    movie_id: str
     title: str
     theatres: List[TheatreSchema]
 

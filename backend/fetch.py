@@ -123,10 +123,13 @@ class TMDB:
     def movie_cast(self):
         movie_id_lst = self.movie_id_lst
         cast = None
+        MAX_VAL = 15
         for movie_id in movie_id_lst:
             url = f"{self._url}movie/{movie_id[0]}/credits?language=en-US"
             resp = _get_url_response(url, self._headers, self.param)
             cast_info = resp["cast"]
+            count = 0
+            print(len(cast_info))
             for cast_d in cast_info:
                 cast_dep = cast_d["known_for_department"]
                 if cast_dep == "Acting":
@@ -143,6 +146,11 @@ class TMDB:
                 movie_obj = db.get(Movie, id=movie_id[1])
                 if cast:
                     cast.casts_movie.append(movie_obj)
+
+                if count == MAX_VAL:
+                    break
+                count += 1
+
         db._session.commit()
         db._close
 
