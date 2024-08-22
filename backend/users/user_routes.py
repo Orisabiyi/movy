@@ -12,8 +12,9 @@ from fastapi.responses import JSONResponse
 from main import settings
 from main.auth import Auth
 from main.database import DB, get_db
+from main.decorators import PermissionDependency, Role, login_required
 from main.security import set_cookie
-from main.decorators import PermissionDependency, login_required, Role
+
 from .models import User, UserToken
 from .open_apidoc import (
     forgot_password_response_doc,
@@ -52,7 +53,7 @@ async def signup(
     db: DB = Depends(get_db),
 ):
     u_data = data.model_dump()
-    u_data['check_against'] = "theatre"
+    u_data["check_against"] = "theatre"
     try:
         tokens, obj = await AUTH.register_user(
             User, background_tasks, **u_data
@@ -87,34 +88,38 @@ async def verify_user_token_email(
     verify_token = data.model_dump()
     verify_token["token"] = verify_token["token"].encode()
     verify_token["id"] = verify_token["id"].encode()
-    is_verified = await AUTH.token_verification(
+    token, obj = await AUTH.token_verification(
         User, background_tasks, **VerifyUserToken(**verify_token).model_dump()
     )
-
-    if is_verified:
-        return JSONResponse(
-            content={
-                "message": "email succcessfully verified",
-                "status_code": 200,
-            },
-            status_code=200,
-        )
+    data = {
+        "id": obj.id,
+        "name": obj.get_name,
+        "refresh_token": token["refresh_token"],
+        "access_token": token["access_token"],
+    }
+    resp = JSONResponse(content=data, status_code=200)
+    set_cookie(resp, "refresh_token", token["refresh_token"], "/")
+    return resp
 
 
 @router.post(
     "/login", response_model=LoginResponseSchema, responses=login_response_doc  # type: ignore
 )
 async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
-    tokens = await AUTH.get_login_token(data.model_dump(), User)
-    resp = JSONResponse(content=tokens, status_code=200)
+    tokens, obj = await AUTH.get_login_token(data.model_dump(), User)
+    data = {
+        "id": obj.id,
+        "name": obj.get_name,
+        "refresh_token": tokens["refresh_token"],
+        "access_token": tokens["access_token"],
+    }
+    resp = JSONResponse(content=data, status_code=200)
     set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
     return resp
 
 
 @router.post("/refresh", responses=refresh_response_doc)  # type: ignore
-async def refresh_token(
-    request: Request, db: DB = Depends(get_db)
-):
+async def refresh_token(request: Request, db: DB = Depends(get_db)):
     refresh_token = request.cookies.get("refresh_token") or ""
     return await AUTH.get_refresh_token(refresh_token)
 
@@ -133,7 +138,7 @@ async def forgot_password_endpoint(
     background_tasks: BackgroundTasks,
     db: DB = Depends(get_db),
 ):
-    await AUTH.forgot_password(User, data, background_tasks) #type: ignore
+    await AUTH.forgot_password(User, data, background_tasks)  # type: ignore
     return JSONResponse(
         content={
             "messaage": "Check your mail for reset password link",

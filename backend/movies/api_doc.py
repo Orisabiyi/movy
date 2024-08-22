@@ -51,7 +51,7 @@ movie_detail_response = {
         "content": {
             "application/json": {
                 "example": {
-                    "id": 1,
+                    "id": "eX9Gw8MaWJjWqD7YkOvJ",
                     "title": "Deadpool & Wolverine",
                     "description": "A listless Wade Wilson toils away in civilian life with his days as the morally flexible mercenary, Deadpool, behind him. But when his homeworld faces an existential threat, Wade must reluctantly suit-up again with an even more reluctant Wolverine.",
                     "tag_line": "Come together.",
@@ -98,7 +98,7 @@ movie_search = {
             "application/json": {
                 "example": [
                     {
-                        "id": 10,
+                        "id": "eX9Gw8MaWJjWqD7YkOvJ" ,
                         "title": "Deadpool",
                         "tagline": "Feel the love.",
                         "runtime": "1hr 48min",
@@ -107,7 +107,7 @@ movie_search = {
                         "url": "http://127.0.0.1:8000/movies/10",
                     },
                     {
-                        "id": 27,
+                        "id": "eX9Gw8MaWJjWqD7YkOvJ",
                         "title": "Once Upon a Deadpool",
                         "tagline": "Yule believe in miracles.",
                         "runtime": "1hr 58min",
@@ -127,4 +127,51 @@ movie_search = {
             }
         },
     },
+}
+
+get_movie_by_theatre= {
+        200: {
+            "description": "Successful response with detailed movie information",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "movie_id": "abcd1234",  # Example of a hashid
+                        "title": "Example Movie",
+                        "theatres": [
+                            {
+                                "theatre_id": "1",
+                                "theatre_name": "Cineplex",
+                                "screens": [
+                                    {
+                                        "screen_id": "101",
+                                        "screen_name": "Screen 1",
+                                        "seats": [
+                                            {"id": 1, "row": "A", "seat_number": 1, "is_available": True},
+                                            {"id": 2, "row": "A", "seat_number": 2, "is_available": False}
+                                        ],
+                                        "showtimes": [
+                                            {
+                                                "showtime_id": "1",
+                                                "date": "2024-08-22",
+                                                "movie_start_time": "19:00:00",
+                                                "movie_end_time": "21:00:00",
+                                                "price": 12.5
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "Movie not found",
+            "content": {
+                "application/json": {
+                    "example": {"message": "Movie with this id not found"}
+                }
+            }
+        }
 }

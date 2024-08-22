@@ -2,6 +2,7 @@ from functools import wraps
 import enum
 from fastapi import status, HTTPException, Request
 from .security import get_current_user_or_theatre, get_token_payload
+from main.database import DB
 from . import settings
 
 class Role(enum.Enum):
@@ -9,6 +10,7 @@ class Role(enum.Enum):
     THEATRE = "theatre"
     ADMIN = "admin"
 
+db = DB()
 class PermissionDependency:
     def __init__(self, role, klass):
         self.role = role
@@ -36,6 +38,7 @@ class PermissionDependency:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="You do not have permission to perform this action.",
             )
+        db._close
         return user
 
 def login_required(klass):

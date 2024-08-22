@@ -74,7 +74,6 @@ class Auth:
         verify both user and theatre token from request
         """
         hashed_token = _decode_token(kwargs["token"])
-        print(hashed_token)
         email = _decode_token(kwargs["id"])
 
         try:
@@ -104,7 +103,7 @@ class Auth:
         background_tasks.add_task(
             send_account_activation_email, obj, background_tasks
         )
-        return True
+        return self._generate_token(obj, "user"), obj
 
     async def get_login_token(self, data: Dict, klass):
         """
@@ -138,7 +137,7 @@ class Auth:
                 },
             )
 
-        return self._generate_token(obj, "user")
+        return self._generate_token(obj, "user"), obj
 
     async def get_refresh_token(self, refresh_token: str):
         """

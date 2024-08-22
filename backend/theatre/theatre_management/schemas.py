@@ -1,5 +1,6 @@
 from typing import Union
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
+from decimal import Decimal
 from datetime import date, datetime
 from datetime import time
 
@@ -12,6 +13,7 @@ class CreateShow(BaseModel):
     movie_id: int
     screen_name: str
     capacity: int
+    ticket_price: Decimal = Field(..., gt=0, decimal_places=2)
     total_row_number: int
     total_seat_number_in_a_row: int
     movie_date: date

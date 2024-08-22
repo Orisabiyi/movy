@@ -74,7 +74,10 @@ verify_token_response = {
         "content": {
             "application/json": {
                 "example": {
-                    "message": "email successfully verified",
+                    "id": "qkwk-aqk1A0-1lnlwq",
+                    "name": "User name",
+                    "refresh_token": "some_refresh_token",
+                    "refresh_token": "some_access_token_token",
                     "status_code": 200,
                 }
             }
