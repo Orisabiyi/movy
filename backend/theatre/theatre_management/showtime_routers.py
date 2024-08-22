@@ -52,7 +52,6 @@ async def theatre_movie_streams(
         screen.theatre = t_perm
         db._session.commit()
     except IntegrityError as e:
-        print(e)
         return JSONResponse(
             content={"message": "screen name for theatre cannot be duplcated"},
             status_code=400,

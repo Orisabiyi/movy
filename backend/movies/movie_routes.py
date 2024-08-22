@@ -15,7 +15,7 @@ from sqlalchemy.orm import aliased, contains_eager, joinedload
 from theatre.models import ShowTime, Theatre
 from theatre.theatre_management.models import Screen, Seat
 
-from .api_doc import movie_detail_response, movie_search, get_movie_by_theatre
+from .api_doc import get_movie_by_theatre, movie_detail_response, movie_search
 from .models import Cast, Genre, Movie, movie_cast, movie_genre
 from .schemas import (
     GenreList,
@@ -39,7 +39,7 @@ router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
 
     # Decode the movie ID
-    movie_id  = decode_id(movie_id)
+    movie_id = decode_id(movie_id)
 
     # Try fetching the movie details from Redis
     get_movie = REDIS_CLI.get(f"movie_{movie_id}")  # type: ignore
@@ -203,13 +203,13 @@ def filter_movies_by_genres(
     status_code=200,
     summary="Get theatres showing the movie",
     description="Detailed information about theatres showing a movie.",
-    responses=get_movie_by_theatre, #type: ignore
+    responses=get_movie_by_theatre,  # type: ignore
 )
 def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     """
     get all theatres that are streaming the movies
     """
-    movie_id = decode_id(movie_id)
+    movie_id = decode_id(movie_id) #type: ignore
     movie = (
         db._session.query(Movie)
         .options(
@@ -221,8 +221,12 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
         .first()
     )
 
+    if not movie:
+        return JSONResponse(
+            content={"message": "movie with id not found"}, status_code=404
+        )
     movie_theatres = {
-        "movie_id":  encode_id(movie.id),
+        "movie_id": encode_id(movie.id),
         "theatres": [],
     }
 
