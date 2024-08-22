@@ -6,11 +6,11 @@ from .settings import HASH_ID_SALT
 hash = Hashids(salt=HASH_ID_SALT, min_length=20)
 
 
-def encode_id(id: Union[str, int]) -> str:
+def encode_id(id:  int) -> str:
    return hash.encode(id)
 
 
-def decode_id(id: str) -> Union[str, int]:
+def decode_id(id: str) -> int:
 
     ha = hash.decode(id)
     if not ha:

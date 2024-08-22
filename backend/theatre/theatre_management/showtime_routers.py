@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, Role, login_required
 from movies.models import Movie
+from sqlalchemy.exc import IntegrityError
 from theatre.models import ShowTime, Theatre  # type: ignore
 
 from .models import Screen, Seat
@@ -13,8 +14,6 @@ from .schemas import CreateShow, MovieList
 from .utils import generate_seats
 
 router = APIRouter(prefix="/theatre/admin", tags=["THEATRE ADMIN"])
-
-
 
 
 @router.get("/movie-list", response_model=List[MovieList])
@@ -45,12 +44,18 @@ async def theatre_movie_streams(
     theatre create shows
     """
     t_perm = db._session.merge(t_perm)
-    
-    movie = db.get(Movie, id=data.movie_id)
-    screen = Screen(screen_name=data.screen_name, capacity=data.capacity)
-    db._session.add(screen)
-    screen.theatre = t_perm
-    db._session.commit()
+
+    try:
+        movie = db.get(Movie, id=data.movie_id)
+        screen = Screen(screen_name=data.screen_name, capacity=data.capacity)
+        db._session.add(screen)
+        screen.theatre = t_perm
+        db._session.commit()
+    except IntegrityError as e:
+        return JSONResponse(
+            content={"message": "screen name for theatre cannot be duplcated"},
+            status_code=400,
+        )
     seat = generate_seats(
         screen, data.total_row_number, data.total_seat_number_in_a_row
     )

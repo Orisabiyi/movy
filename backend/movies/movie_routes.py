@@ -15,7 +15,7 @@ from sqlalchemy.orm import aliased, contains_eager, joinedload
 from theatre.models import ShowTime, Theatre
 from theatre.theatre_management.models import Screen, Seat
 
-from .api_doc import movie_detail_response, movie_search, get_movie_by_theatre
+from .api_doc import get_movie_by_theatre, movie_detail_response, movie_search
 from .models import Cast, Genre, Movie, movie_cast, movie_genre
 from .schemas import (
     GenreList,
@@ -39,7 +39,7 @@ router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
 
     # Decode the movie ID
-    movie_id: int = decode_id(movie_id)
+    movie_id = decode_id(movie_id)
 
     # Try fetching the movie details from Redis
     get_movie = REDIS_CLI.get(f"movie_{movie_id}")  # type: ignore
@@ -135,18 +135,19 @@ def search_movies(
     movie_lst = [
         MovieListSchemas(
             **{
-                "id": movie.id,
+                "id": encode_id(movie.id),
                 "title": movie.title,
                 "tagline": movie.tag_line,
                 "poster_path": movie.poster_path,
                 "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",
+                "description": movie.description,
                 "release_date": str(movie.release_date),
-                "url": f"{request.base_url}movies/{movie.id}",
+                "url": f"{request.base_url}movies/{encode_id(movie.id)}",
             }
         ).model_dump()
         for movie in results
     ]
-    return JSONResponse(content=movie_cast, status_code=200)
+    return JSONResponse(content=movie_lst, status_code=200)
 
 
 # @router.get('/upcoming-movies')
@@ -202,13 +203,13 @@ def filter_movies_by_genres(
     status_code=200,
     summary="Get theatres showing the movie",
     description="Detailed information about theatres showing a movie.",
-    responses=get_movie_by_theatre,
+    responses=get_movie_by_theatre,  # type: ignore
 )
 def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     """
     get all theatres that are streaming the movies
     """
-    movie_id = decode_id(movie_id)
+    movie_id = decode_id(movie_id) #type: ignore
     movie = (
         db._session.query(Movie)
         .options(
@@ -221,10 +222,11 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     )
 
     if not movie:
-        return JSONResponse(content={"theatres": []}, status_code=400)
-    movie_data = {
+        return JSONResponse(
+            content={"message": "movie with id not found"}, status_code=404
+        )
+    movie_theatres = {
         "movie_id": encode_id(movie.id),
-        "title": movie.title,
         "theatres": [],
     }
 
@@ -252,6 +254,7 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
             screen_dict = {
                 "screen_id": encode_id(screen.id),
                 "screen_name": screen.screen_name,
+                "capacity": screen.capacity,
                 "seats": [
                     {
                         "seat_id": encode_id(seat.id),
@@ -274,10 +277,8 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
                 "price": showtime.price,  # Convert Decimal to float
             }
         )
-
-    movie_data["theatres"] = list(theatres_dict.values())
-
-    return movie_data
+    movie_theatres["theatres"] = list(theatres_dict.values())
+    return movie_theatres
 
 
 # TODO filter by date
