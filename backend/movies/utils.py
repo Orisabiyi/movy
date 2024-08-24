@@ -12,7 +12,7 @@ def movie_schema_list(request: Request, movies: List[Movie]):
     m_list = [
         MovieListSchemas(
             **{
-                "id": encode_id(movie.id),
+                "id": encode_id(movie.id), # type: ignore
                 "title": movie.title,
                 "tagline": movie.tag_line,
                 "runtime": f"{movie.duration_in_min // 60}hr {movie.duration_in_min % 60}min",

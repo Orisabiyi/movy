@@ -34,11 +34,10 @@ def _encode_token(encrypt_text: bytes) -> str:
 
 
 def movie_schema_list(request: Request, movies: List[Movie]):
-    print(type(encode_id(movies[0].id)), "--------------------->")
     m_list = [
         MovieListSchemas(
             **{
-                "id": encode_id(movie.id),
+                "id": encode_id(movie.id), #type: ignore
                 "title": movie.title,
                 "tagline": movie.tag_line,
                 "description": movie.description,
