@@ -1,5 +1,5 @@
-from datetime import datetime
 import json
+from datetime import datetime
 from decimal import Decimal
 from typing import List
 
@@ -40,7 +40,7 @@ router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
 
     # Decode the movie ID
-    movie_id = decode_id(movie_id) # type: ignore
+    movie_id = decode_id(movie_id)  # type: ignore
 
     # Try fetching the movie details from Redis
     get_movie = REDIS_CLI.get(f"movie_{movie_id}")  # type: ignore
@@ -74,7 +74,7 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
         # Prepare the movie details
         for movie in movie:
             movie_dict = {
-                "id": encode_id(movie.id), #type:ignore
+                "id": encode_id(movie.id),  # type:ignore
                 "title": movie.title,
                 "description": movie.description,
                 "poster_path": movie.poster_path,
@@ -151,8 +151,6 @@ def search_movies(
     return JSONResponse(content=movie_lst, status_code=200)
 
 
-    
-
 @router.get(
     "/genres/", response_model=List[GenreList], summary="list all moie genres"
 )
@@ -209,7 +207,7 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     """
     get all theatres that are streaming the movies
     """
-    movie_id = decode_id(movie_id) #type: ignore
+    movie_id = decode_id(movie_id)  # type: ignore
     movie = (
         db._session.query(Movie)
         .options(
@@ -226,7 +224,7 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
             content={"message": "movie with id not found"}, status_code=404
         )
     movie_theatres = {
-        "movie_id": encode_id(movie.id), #type: ignore
+        "movie_id": encode_id(movie.id),  # type: ignore
         "theatres": [],
     }
 
@@ -255,7 +253,14 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
                 "screen_id": encode_id(screen.id),
                 "screen_name": screen.screen_name,
                 "total_seats": screen.capacity,
-                "seat_remaining": len(list(filter(lambda x : x.is_available == True, screen.seats))),
+                "seat_remaining": len(
+                    list(
+                        filter(
+                            lambda seat: seat.is_available == True,
+                            screen.seats,
+                        )
+                    )
+                ),
                 "seats": [
                     {
                         "seat_id": encode_id(seat.id),
