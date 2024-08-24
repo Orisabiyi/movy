@@ -87,7 +87,7 @@ class ShowTime(Base):
     from .theatre_management.models import Screen
     id = Column(Integer, primary_key=True, autoincrement=True)
     start_movie_time = Column(Time, nullable=False)
-    end_movie_time = Column(Time, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
     date =  Column(Date, nullable=False)
     price = Column(Numeric(precision=10, scale=2), nullable=False)
     created_at = Column(DateTime, server_default=func.now())

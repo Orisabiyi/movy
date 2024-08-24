@@ -273,7 +273,6 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
                 "showtime_id": encode_id(showtime.id),
                 "movie_date": showtime.date,  # Format datetime
                 "movie_start_time": showtime.start_movie_time,
-                "movie_end_time": showtime.end_movie_time,
                 "price": showtime.price,  # Convert Decimal to float
             }
         )

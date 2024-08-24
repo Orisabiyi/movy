@@ -44,6 +44,9 @@ async def book_movie(
 
     seat_ids = [decode_id(seat.seat_id) for seat in data.seats]
 
+    price = 0
+    for seat in seat_ids:
+        price += show_time.price
     seat_available = (
         db._session.query(Seat)
         .filter(Seat.id.in_(seat_ids), Seat.is_available == True)
@@ -55,14 +58,12 @@ async def book_movie(
             content={"messge": "the chosen seats are already reserved"},
         )
     try:
-
         booking = Booking(
-            showtime_id=decode_id(data.showtime_id), user_id=current_user.id
+            showtime_id=decode_id(data.showtime_id), user_id=current_user.id, price=price
         )
         db._session.add(booking)
         db._session.commit()
         db._session.refresh(booking)
-
     except IntegrityError:
         return JSONResponse(
             status_code=400,
@@ -132,10 +133,7 @@ async def get_user_bookings(
                     "movie_start_time": booking.show_time.start_movie_time.strftime(
                         "%H:%M"
                     ),
-                    "movie_end_time": booking.show_time.end_movie_time.strftime(
-                        "%H:%M"
-                    ),
-                    "price": booking.show_time.price,
+                    "price": float(booking.price),
                 },
                 seats=[
                     {

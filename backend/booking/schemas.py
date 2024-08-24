@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from decimal import Decimal
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel
@@ -35,7 +36,7 @@ class UserBookingResponse(BaseModel):
     movie: Dict[str, Union[int, str, float]]
     theatre: Dict[str, Union[int, str, float]]
     screen: Dict[str, Union[int, str, float]]
-    showtime: Dict[str, Union[int, str, float, time, date]]
+    showtime: Dict[str, Union[int, str, float, time, date, Decimal]]
     seats: List[Dict[str, Union[int, str, float]]]
 
     class Config:
