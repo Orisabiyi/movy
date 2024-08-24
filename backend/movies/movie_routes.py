@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from decimal import Decimal
 from typing import List
 
@@ -39,7 +40,7 @@ router = APIRouter(prefix="/movies", tags=["MOVY LISTING"])
 def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
 
     # Decode the movie ID
-    movie_id = decode_id(movie_id)
+    movie_id = decode_id(movie_id)  # type: ignore
 
     # Try fetching the movie details from Redis
     get_movie = REDIS_CLI.get(f"movie_{movie_id}")  # type: ignore
@@ -73,7 +74,7 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
         # Prepare the movie details
         for movie in movie:
             movie_dict = {
-                "id": encode_id(movie.id),
+                "id": encode_id(movie.id),  # type:ignore
                 "title": movie.title,
                 "description": movie.description,
                 "poster_path": movie.poster_path,
@@ -150,16 +151,13 @@ def search_movies(
     return JSONResponse(content=movie_lst, status_code=200)
 
 
-# @router.get('/upcoming-movies')
-# def get_upcoming_movies(db: DB = Depends(get_db)):
-#     #TODO implement the get movie endpoint
-#     ...
-
-
 @router.get(
     "/genres/", response_model=List[GenreList], summary="list all moie genres"
 )
 def get_movie_list_genres(db: DB = Depends(get_db)):
+    """
+    list all movie genres
+    """
     query = db._session.query(Genre).all()
     genre_list = [
         GenreList(**{"id": genre.id, "name": genre.name}).model_dump()
@@ -209,7 +207,7 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
     """
     get all theatres that are streaming the movies
     """
-    movie_id = decode_id(movie_id) #type: ignore
+    movie_id = decode_id(movie_id)  # type: ignore
     movie = (
         db._session.query(Movie)
         .options(
@@ -226,7 +224,7 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
             content={"message": "movie with id not found"}, status_code=404
         )
     movie_theatres = {
-        "movie_id": encode_id(movie.id),
+        "movie_id": encode_id(movie.id),  # type: ignore
         "theatres": [],
     }
 
@@ -254,7 +252,15 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
             screen_dict = {
                 "screen_id": encode_id(screen.id),
                 "screen_name": screen.screen_name,
-                "capacity": screen.capacity,
+                "total_seats": screen.capacity,
+                "seat_remaining": len(
+                    list(
+                        filter(
+                            lambda seat: seat.is_available == True,
+                            screen.seats,
+                        )
+                    )
+                ),
                 "seats": [
                     {
                         "seat_id": encode_id(seat.id),
@@ -273,7 +279,6 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
                 "showtime_id": encode_id(showtime.id),
                 "movie_date": showtime.date,  # Format datetime
                 "movie_start_time": showtime.start_movie_time,
-                "movie_end_time": showtime.end_movie_time,
                 "price": showtime.price,  # Convert Decimal to float
             }
         )

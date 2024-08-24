@@ -97,13 +97,13 @@ async def verify_theatre_email(
     """
     token, obj = await THEATRE_AUTH.token_verification(
         Theatre, background_tasks, **data.model_dump()
-    )
+    ) #type: ignore
     data = {
         "id": obj.id,
         "name": obj.get_name,
         "refresh_token": token["refresh_token"],
         "access_token": token["access_token"],
-    }
+    } #type:ignore
     resp = JSONResponse(content=data, status_code=200)
     set_cookie(resp, "refresh_token", token["refresh_token"], "/")
     return resp
@@ -114,13 +114,13 @@ async def verify_theatre_email(
 async def login_theatre(data: TheatreLogin, db: DB = Depends(get_db)):
     tokens, obj = await THEATRE_AUTH.get_login_token(data.model_dump(), Theatre)
     data = {
-        "id": obj.id,
-        "name": obj.get_name,
-        "refresh_token": tokens["refresh_token"],
-        "access_token": tokens["access_token"],
-    }
+        "id": obj.id, # type: ignore 
+        "name": obj.get_name, #type: ignore
+        "refresh_token": tokens["refresh_token"], #type:ignore
+        "access_token": tokens["access_token"], #type: ignore
+    } #type: ignore
     resp = JSONResponse(content=data, status_code=200)
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/") #type: ignore
     return resp
 
 

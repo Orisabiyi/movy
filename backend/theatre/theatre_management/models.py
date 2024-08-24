@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, DateTime, String, func, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import mapped_column, relationship
 from theatre.models import Theatre
+from booking.models import booking_seat
 from main.database import Base
 
 class Screen(Base):
@@ -26,4 +27,5 @@ class Seat(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 
+    booking = relationship("Booking", secondary=booking_seat, back_populates="seats")
     screen = relationship("Screen", back_populates="seats")

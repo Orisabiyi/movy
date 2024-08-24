@@ -71,7 +71,7 @@ class Movie(Base):
 
     @property
     def get_path(self):
-        return f"movies/{encode_id(self.id)}"
+        return f"movies/{encode_id(self.id)}" #type: ignore
 
 
     __table_args__ = (

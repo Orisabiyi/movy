@@ -1,17 +1,20 @@
+from datetime import datetime
 import json
 from typing import List, Optional, TypeVar
 
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination, paginate
-from .pagination import CustomPage, get_custom_page, CustomParams
 from movies.api_doc import lst_movie_response
 from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
+from theatre.models import ShowTime
 from sqlalchemy import desc
+
 from .database import DB, get_db
+from .pagination import CustomPage, CustomParams, get_custom_page
 from .util_files import movie_schema_list
 
 app = FastAPI(
@@ -34,15 +37,12 @@ app.add_middleware(
 )
 
 
-
-
-
 @app.get(
     "/",
     response_model=CustomPage[MovieListSchemas],
     status_code=200,
     response_description="endpoint for listing every movies in the database",
-    responses=lst_movie_response, #type: ignore
+    responses=lst_movie_response,  # type: ignore
     tags=["MOVY LISTING"],
 )
 def get_all_movies(
@@ -58,7 +58,7 @@ def get_all_movies(
     # add the data for caching
     if not all_movies:
         movies_query = (
-            db._session.query(Movie).order_by(desc(Movie.release_date)).all()
+            db._session.query(Movie).filter(Movie.release_date < datetime.now()).order_by(desc(Movie.release_date)).all()
         )
         m_list = movie_schema_list(request, movies_query)
         # fetch the data from caching
@@ -67,7 +67,7 @@ def get_all_movies(
             json.dumps([movie.model_dump_json() for movie in m_list]),
         )
     else:
-        value_set =  all_movies.decode("UTF-8") #type: ignore
+        value_set = all_movies.decode("UTF-8")  # type: ignore
         m_list = [
             MovieListSchemas(**json.loads(movie))
             for movie in json.loads(value_set)
@@ -78,16 +78,50 @@ def get_all_movies(
     return custom_page
 
 
+@app.get('/upcoming-movies', response_model=List[MovieListSchemas], status_code=200)
+def get_upcoming_movies(request: Request, db: DB = Depends(get_db)):
+    """
+    return list of all upcoming movies
+    """
+    today = datetime.now().date()
+    movies = db._session.query(Movie).filter(Movie.release_date > today).all()
+
+    if not movies:
+        return JSONResponse(status_code=400, content={"message": "No upcomig movies"})
+
+
+    m_list = movie_schema_list(request, movies)
+    return m_list
+
+
+@app.get("/streaming-now", status_code=200)
+def get_movies_streaming_now(request: Request, db: DB = Depends(get_db)):
+    show_times = db._session.query(ShowTime).all()
+
+    if not show_times:
+        return JSONResponse(status_code=404, content={"message": "No streaming movies found"})
+
+    m_lst = []
+    for show_time in show_times:
+        m_lst.append(show_time.movies)
+
+    m_list = movie_schema_list(request, m_lst)
+    return m_list
+
 add_pagination(app)
 
+from booking import booking_routes
 from movies import movie_routes
 from theatre import theater_routes
-from users import user_routes
 from theatre.theatre_management import showtime_routers
+from users import user_routes
+
 app.include_router(movie_routes.router)
 app.include_router(user_routes.router)
 app.include_router(theater_routes.router)
 app.include_router(showtime_routers.router)
+app.include_router(booking_routes.router)
+
 
 async def custom_validation_exception_handler(
     request: Request, exc: RequestValidationError
@@ -109,10 +143,11 @@ async def custom_validation_exception_handler(
 
 
 app.add_exception_handler(
-    RequestValidationError, custom_validation_exception_handler #type: ignore
+    RequestValidationError, custom_validation_exception_handler  # type: ignore
 )
 
 from fastapi.openapi.utils import get_openapi
+
 
 def custom_openapi():
     if app.openapi_schema:

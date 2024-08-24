@@ -47,7 +47,8 @@ async def theatre_movie_streams(
 
     try:
         movie = db.get(Movie, id=data.movie_id)
-        screen = Screen(screen_name=data.screen_name, capacity=data.capacity)
+        capacity = data.total_row_number * data.total_seat_number_in_a_row
+        screen = Screen(screen_name=data.screen_name, capacity=capacity)
         db._session.add(screen)
         screen.theatre = t_perm
         db._session.commit()
@@ -62,14 +63,11 @@ async def theatre_movie_streams(
     db._session.add_all(seat)
     db._session.commit()
 
-    end_show_time = datetime.combine(
-        data.movie_date, data.movie_time_start
-    ) + timedelta(minutes=movie.duration_in_min)
     show_time = ShowTime(
         price=data.ticket_price,
         date=data.movie_date,
         start_movie_time=data.movie_time_start,
-        end_movie_time=end_show_time.time(),
+        expires_at=data.ticket_expires_at,
     )
     show_time.screen = screen
     show_time.movies = movie
@@ -85,4 +83,6 @@ async def theatre_movie_streams(
     )
 
 
-# @router.post("/")
+# @router.get("/theatre-info")
+# def get_theatre_info():
+#     ...
