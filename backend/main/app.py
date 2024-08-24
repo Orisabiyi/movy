@@ -3,15 +3,16 @@ from typing import List, Optional, TypeVar
 
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination, paginate
-from .pagination import CustomPage, get_custom_page, CustomParams
 from movies.api_doc import lst_movie_response
 from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
 from sqlalchemy import desc
+
 from .database import DB, get_db
+from .pagination import CustomPage, CustomParams, get_custom_page
 from .util_files import movie_schema_list
 
 app = FastAPI(
@@ -34,15 +35,12 @@ app.add_middleware(
 )
 
 
-
-
-
 @app.get(
     "/",
     response_model=CustomPage[MovieListSchemas],
     status_code=200,
     response_description="endpoint for listing every movies in the database",
-    responses=lst_movie_response, #type: ignore
+    responses=lst_movie_response,  # type: ignore
     tags=["MOVY LISTING"],
 )
 def get_all_movies(
@@ -67,7 +65,7 @@ def get_all_movies(
             json.dumps([movie.model_dump_json() for movie in m_list]),
         )
     else:
-        value_set =  all_movies.decode("UTF-8") #type: ignore
+        value_set = all_movies.decode("UTF-8")  # type: ignore
         m_list = [
             MovieListSchemas(**json.loads(movie))
             for movie in json.loads(value_set)
@@ -80,14 +78,18 @@ def get_all_movies(
 
 add_pagination(app)
 
+from booking import booking_routes
 from movies import movie_routes
 from theatre import theater_routes
-from users import user_routes
 from theatre.theatre_management import showtime_routers
+from users import user_routes
+
 app.include_router(movie_routes.router)
 app.include_router(user_routes.router)
 app.include_router(theater_routes.router)
 app.include_router(showtime_routers.router)
+app.include_router(booking_routes.router)
+
 
 async def custom_validation_exception_handler(
     request: Request, exc: RequestValidationError
@@ -109,10 +111,11 @@ async def custom_validation_exception_handler(
 
 
 app.add_exception_handler(
-    RequestValidationError, custom_validation_exception_handler #type: ignore
+    RequestValidationError, custom_validation_exception_handler  # type: ignore
 )
 
 from fastapi.openapi.utils import get_openapi
+
 
 def custom_openapi():
     if app.openapi_schema:
