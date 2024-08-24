@@ -133,7 +133,7 @@ async def get_user_bookings(
                     "movie_start_time": booking.show_time.start_movie_time.strftime(
                         "%H:%M"
                     ),
-                    "price": float(booking.price),
+                    "price": float(booking.price), #type: ignore
                 },
                 seats=[
                     {

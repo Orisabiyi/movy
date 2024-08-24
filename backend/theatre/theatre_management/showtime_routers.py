@@ -47,7 +47,6 @@ async def theatre_movie_streams(
 
     try:
         movie = db.get(Movie, id=data.movie_id)
-        print(movie)
         capacity = data.total_row_number * data.total_seat_number_in_a_row
         screen = Screen(screen_name=data.screen_name, capacity=capacity)
         db._session.add(screen)
@@ -84,4 +83,6 @@ async def theatre_movie_streams(
     )
 
 
-# @router.post("/")
+# @router.get("/theatre-info")
+# def get_theatre_info():
+#     ...

@@ -254,7 +254,8 @@ def get_theatres_streaming_movie(movie_id: str, db: DB = Depends(get_db)):
             screen_dict = {
                 "screen_id": encode_id(screen.id),
                 "screen_name": screen.screen_name,
-                "capacity": screen.capacity,
+                "total_seats": screen.capacity,
+                "seat_remaining": len(list(filter(lambda x : x.is_available == True, screen.seats))),
                 "seats": [
                     {
                         "seat_id": encode_id(seat.id),
