@@ -10,6 +10,7 @@ from fastapi_pagination import add_pagination, paginate
 from movies.api_doc import lst_movie_response
 from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
+from theatre.models import ShowTime
 from sqlalchemy import desc
 
 from .database import DB, get_db
@@ -91,7 +92,21 @@ def get_upcoming_movies(request: Request, db: DB = Depends(get_db)):
 
     m_list = movie_schema_list(request, movies)
     return m_list
- 
+
+
+@app.get("/streaming-now", status_code=200)
+def get_movies_streaming_now(request: Request, db: DB = Depends(get_db)):
+    show_times = db._session.query(ShowTime).all()
+
+    if not show_times:
+        return JSONResponse(status_code=404, content={"message": "No streaming movies found"})
+
+    m_lst = []
+    for show_time in show_times:
+        m_lst.append(show_time.movies)
+
+    m_list = movie_schema_list(request, m_lst)
+    return m_list
 
 add_pagination(app)
 
