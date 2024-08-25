@@ -29,3 +29,4 @@ class Seat(Base):
 
     booking = relationship("Booking", secondary=booking_seat, back_populates="seats")
     screen = relationship("Screen", back_populates="seats")
+
