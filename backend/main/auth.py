@@ -261,6 +261,30 @@ class Auth:
         self._db._session.add(user)
         self._db._session.commit()
 
+
+    async def oauth_user_auth(self, data):
+        """
+        authenticate oauth user Gmail
+        """
+        user = self._db._session.query(User).filter(User.email == data["email"]).first()
+
+        if user:
+            if user.auth_provider != "gmail":
+                return HTTPException(status_code=400, detail="Please log in with your email address")
+        user = User(
+            first_name=data["given_name"],
+            last_name=data["family_name"],
+            email=data["email"],
+            password=hash_password(settings.OAUTH_PASSWORD),
+            is_verified=True,
+            auth_provider="gmail",
+        )
+        self._db._session.add(user)
+        self._db._session.commit()
+        self._db._session.refresh(user)
+
+        return self._generate_token(user, "user"), user
+ 
     def _generate_token(self, user, type: str):
         # generate JWT token
         refresh_key = unique_string(100)

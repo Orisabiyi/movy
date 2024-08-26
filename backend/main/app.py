@@ -1,7 +1,8 @@
-from datetime import datetime
 import json
+from datetime import datetime
 from typing import List, Optional, TypeVar
 
+from main import settings
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,8 +11,9 @@ from fastapi_pagination import add_pagination, paginate
 from movies.api_doc import lst_movie_response
 from movies.models import Movie
 from movies.schemas import CustomPage, MovieListSchemas
-from theatre.models import ShowTime
 from sqlalchemy import desc
+from starlette.middleware.sessions import SessionMiddleware
+from theatre.models import ShowTime
 
 from .database import DB, get_db
 from .pagination import CustomPage, CustomParams, get_custom_page
@@ -25,7 +27,6 @@ app = FastAPI(
     version="1.0",
 )
 
-
 # middleware setup
 origins = ["*"]
 app.add_middleware(
@@ -35,6 +36,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)
 
 
 @app.get(
@@ -58,7 +61,10 @@ def get_all_movies(
     # add the data for caching
     if not all_movies:
         movies_query = (
-            db._session.query(Movie).filter(Movie.release_date < datetime.now()).order_by(desc(Movie.release_date)).all()
+            db._session.query(Movie)
+            .filter(Movie.release_date < datetime.now())
+            .order_by(desc(Movie.release_date))
+            .all()
         )
         m_list = movie_schema_list(request, movies_query)
         # fetch the data from caching
@@ -78,7 +84,9 @@ def get_all_movies(
     return custom_page
 
 
-@app.get('/upcoming-movies', response_model=List[MovieListSchemas], status_code=200)
+@app.get(
+    "/upcoming-movies", response_model=List[MovieListSchemas], status_code=200
+)
 def get_upcoming_movies(request: Request, db: DB = Depends(get_db)):
     """
     return list of all upcoming movies
@@ -87,8 +95,9 @@ def get_upcoming_movies(request: Request, db: DB = Depends(get_db)):
     movies = db._session.query(Movie).filter(Movie.release_date > today).all()
 
     if not movies:
-        return JSONResponse(status_code=400, content={"message": "No upcomig movies"})
-
+        return JSONResponse(
+            status_code=400, content={"message": "No upcomig movies"}
+        )
 
     m_list = movie_schema_list(request, movies)
     return m_list
@@ -99,7 +108,9 @@ def get_movies_streaming_now(request: Request, db: DB = Depends(get_db)):
     show_times = db._session.query(ShowTime).all()
 
     if not show_times:
-        return JSONResponse(status_code=404, content={"message": "No streaming movies found"})
+        return JSONResponse(
+            status_code=404, content={"message": "No streaming movies found"}
+        )
 
     m_lst = []
     for show_time in show_times:
@@ -107,6 +118,7 @@ def get_movies_streaming_now(request: Request, db: DB = Depends(get_db)):
 
     m_list = movie_schema_list(request, m_lst)
     return m_list
+
 
 add_pagination(app)
 

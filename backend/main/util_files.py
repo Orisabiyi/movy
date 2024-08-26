@@ -50,3 +50,6 @@ def movie_schema_list(request: Request, movies: List[Movie]):
         for movie in movies
     ]
     return m_list
+
+if __name__ == "__main__":
+    print(unique_string(30))
