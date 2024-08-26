@@ -133,6 +133,10 @@ ENV/
 env.bak/
 venv.bak/
 
+
+uuid
+random
+
 # Spyder project settings
 .spyderproject
 .spyproject
