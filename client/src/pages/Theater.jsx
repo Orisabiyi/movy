@@ -35,7 +35,7 @@ function Theater() {
   );
 
   return (
-    <main>
+    <main className="relative">
       <nav className="flex items-center gap-[2rem] px-[3rem] py-[1.5rem]">
         <figure className="text-[2.5rem] text-white font-semibold bg-orange-700 p-[1rem] rounded-lg">
           <Link to="/">M</Link>
