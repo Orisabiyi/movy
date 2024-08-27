@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import redCutain from "../../public/red-curtain.jpg";
+
 function Theater() {
   const [theatres, setTheatres] = useState([]);
   const { id } = useParams();
@@ -38,15 +40,24 @@ function Theater() {
         <p className="font-bold leading-10 text-orange-700 text-[3rem]">Movy</p>
       </nav>
 
-      <section className="px-[3rem] py-[6rem]">
-        <h2 className="mb-8">Theaters Showing Movies</h2>
+      <section className="px-[3rem] py-[3rem]">
+        <h2 className="mb-8 text-[3rem] font-extrabold">
+          Theaters Showing Movies
+        </h2>
         <div className="grid grid-cols-4 gap-[2rem]">
           {theatres?.map(({ theatre_name: theatreName, screens }) => (
             <figure
               key={theatreName}
               className="h-[35rem] flex flex-col border-[1.5px] border-orange-700 rounded-xl overflow-hidden"
             >
-              <h3 className="h-[40%] flex justify-center items-center bg-orange-400 text-orange-700 text-[1.8rem] text-center font-bold">
+              <h3
+                className="h-[40%] flex justify-center items-center bg-orange-400 text-white text-[1.8rem] text-center font-bold"
+                style={{
+                  background: "url(../../public/red-curtain.jpg)",
+                  backgroundSize: "150%",
+                  backgroundPosition: "top",
+                }}
+              >
                 {theatreName}
               </h3>
               <div className="flex flex-col flex-1 items-center justify-center">
