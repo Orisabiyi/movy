@@ -340,15 +340,16 @@ async def verify_user_booking_payment(
 
     if not booking:
         return JSONResponse(status_code =404, content={"message": "Booking for user not found"})
-    booking.status = BookingStatus.CONFIRMED
+    booking.status = BookingStatus.CONFIRMED #type: ignore
     db._session.commit()
 
     ticket_info = {
         "viewer": f"{booking.user.first_name} {booking.user.last_name}",
         "theatre_name": booking.show_time.screen.theatre.name,
         "screen": booking.show_time.screen.screen_name,
-        "booking_status": booking.status,
+        "booking_status": booking.status.value,
         "movie": booking.show_time.movies.title,
         "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats]
     }
-    return JSONResponse(status_code=200, content={"message": "Booked successfully"})
+    print(ticket_info)
+    return JSONResponse(status_code=200, content=ticket_info)
