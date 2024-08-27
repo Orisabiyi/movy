@@ -49,9 +49,7 @@ function App() {
                 <p className="text-[1.3rem]">Description: {description}</p>
 
                 <div className="mt-auto text-[1.5rem] font-semibold text-blue-950 underline">
-                  <Link to={`${title.replace(":", "")}?${id}`}>
-                    Check Movie Full Details
-                  </Link>
+                  <Link to={id}>Check Movie Full Details</Link>
                 </div>
               </div>
             </figure>

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Link } from "react-router-dom";
 
 function MovieDetails() {
-  const { search } = useLocation();
-  const searchId = search.slice(1, search.length);
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const [
     {
@@ -20,16 +20,18 @@ function MovieDetails() {
     setMoviesData,
   ] = useState({});
 
+  function bookTheater() {
+    navigate("theater");
+  }
+
   useEffect(
     function () {
       async function getMoviesWithId() {
         try {
           const res = await fetch(
-            `https://homely-mia-hng-c4ac2199.koyeb.app/movies/${searchId}`
+            `https://homely-mia-hng-c4ac2199.koyeb.app/movies/${id}`
           );
           const data = await res.json();
-
-          console.log(data);
 
           setMoviesData(data);
         } catch (error) {
@@ -39,7 +41,7 @@ function MovieDetails() {
 
       getMoviesWithId();
     },
-    [searchId]
+    [id]
   );
 
   return (
@@ -108,7 +110,10 @@ function MovieDetails() {
                 </li>
               ))}
           </ul>
-          <button className="block mt-auto bg-orange-700 p-4 text-[1.5rem] text-white font-bold rounded-2xl">
+          <button
+            className="block mt-auto bg-orange-700 p-4 text-[1.5rem] text-white font-bold rounded-2xl"
+            onClick={bookTheater}
+          >
             Book Movie Ticket
           </button>
         </aside>
