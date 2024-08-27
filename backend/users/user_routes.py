@@ -44,8 +44,8 @@ oauth = OAuth()
 oauth.register(
     name="google",
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_id=settings.GOOGLE_CLIENT_ID,
-    client_secret=settings.GOOGLE_CLIENT_SECRET,
+    client_id=settings.GOOGLE_CLIENT_ID, #type: ignore
+    client_secret=settings.GOOGLE_CLIENT_SECRET,#type: ignore
     client_kwargs={
         "scope": "email openid profile",
         "redirect_url": "http://localhost:8000/auth",
@@ -172,17 +172,16 @@ async def reset_password_endpoint(
     )
 
 
-# TODO oauth2 auth endpoint
 @router.get("/google/login")
 async def login(request: Request):
     url = request.url_for("auth")
-    return await oauth.google.authorize_redirect(request, url)
+    return await oauth.google.authorize_redirect(request, url) #type: ignore
 
 
 @router.get("/callback/auth")
 async def auth(request: Request):
     try:
-        token = await oauth.google.authorize_access_token(request)
+        token = await oauth.google.authorize_access_token(request) #type: ignore
     except OAuthError as e:
         return JSONResponse(content={"message": f"{e.error}"}, status_code=400)
 
@@ -190,7 +189,7 @@ async def auth(request: Request):
     if not user:
         ...
     request.session["user"] = dict(user)
-    token, user = await AUTH.oauth_user_auth(dict(user))
+    token, user = await AUTH.oauth_user_auth(dict(user)) #type: ignore
 
     resp = JSONResponse(
         content={

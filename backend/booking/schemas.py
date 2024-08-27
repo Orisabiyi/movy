@@ -64,3 +64,7 @@ class TicketRequest(BaseModel):
 
 class BookingPayment(BaseModel):
     booking_id: str
+
+class BookingVerifyTransaction(BaseModel):
+    booking_id: str
+    reference: str

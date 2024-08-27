@@ -62,9 +62,8 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
             .outerjoin(Cast, movie_cast.c.cast_id == Cast.id)
             .filter(Movie.id == movie_id)
             .options(contains_eager(Movie.movie_casts))
-            # .first()
+            .all()
         )
-
         if not movie:
             return JSONResponse(
                 status_code=404,
@@ -72,6 +71,7 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
             )
 
         # Prepare the movie details
+        movie_dict = {}
         for movie in movie:
             movie_dict = {
                 "id": encode_id(movie.id),  # type:ignore
@@ -95,6 +95,7 @@ def get_movie_detail(movie_id: str, db: DB = Depends(get_db)):
             }
 
         # Add the data to Redis
+        print(movie_dict)
         data = MovieDetailSchema(**movie_dict)
         REDIS_CLI.set(f"movie_{movie_id}", data.model_dump_json())
     else:
