@@ -1,0 +1,7 @@
+.overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(17, 24, 39, 0.7) 10%,
+    rgba(17, 24, 39, 0.879) 90%
+  );
+}
