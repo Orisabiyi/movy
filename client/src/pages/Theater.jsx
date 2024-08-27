@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Outlet, useParams } from "react-router-dom";
 import DotLoader from "react-spinners/DotLoader";
 
 function Theater() {
@@ -48,7 +48,13 @@ function Theater() {
           Theaters Showing Movies
         </h2>
 
-        <div className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] h-full w-full flex items-center justify-center">
+        <div
+          className={
+            isLoading
+              ? "absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] h-full w-full flex items-center justify-center"
+              : "hidden"
+          }
+        >
           {isLoading && <DotLoader color="#c2410c" height={90} width={15} />}
         </div>
 
@@ -78,6 +84,7 @@ function Theater() {
                       <Link
                         key={screenName}
                         className="flex flex-col gap-[.3rem] leading-5 px-[3rem] py-[1rem] font-semibold rounded-[50rem] border-orange-700 border-b-[2px] text-[1.3rem] hover:bg-orange-700 hover:text-white"
+                        to="signup"
                       >
                         <span>Screen name: {screenName}</span>
                         <span>Seats Left: {seatRemaining}</span>
@@ -90,6 +97,8 @@ function Theater() {
           </div>
         )}
       </section>
+
+      <Outlet />
     </main>
   );
 }
