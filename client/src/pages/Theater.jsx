@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import redCutain from "../../public/red-curtain.jpg";
-
 function Theater() {
   const [theatres, setTheatres] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { id } = useParams();
 
   useEffect(
     function () {
       async function getTheaters() {
         try {
+          setIsLoading(true);
           const res = await fetch(
             `https://homely-mia-hng-c4ac2199.koyeb.app/movies/${id}/theatre`
           );
@@ -23,6 +23,8 @@ function Theater() {
           console.log(data.theatres);
         } catch (error) {
           console.log(error);
+        } finally {
+          setIsLoading(false);
         }
       }
 
