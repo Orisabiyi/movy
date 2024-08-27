@@ -271,17 +271,18 @@ class Auth:
         if user:
             if user.auth_provider != "gmail":
                 return HTTPException(status_code=400, detail="Please log in with your email address")
-        user = User(
-            first_name=data["given_name"],
-            last_name=data["family_name"],
-            email=data["email"],
-            password=hash_password(settings.OAUTH_PASSWORD),
-            is_verified=True,
-            auth_provider="gmail",
-        )
-        self._db._session.add(user)
-        self._db._session.commit()
-        self._db._session.refresh(user)
+        else:
+            user = User(
+                first_name=data["given_name"],
+                last_name=data["family_name"],
+                email=data["email"],
+                password=hash_password(settings.OAUTH_PASSWORD), #type: ignore
+                is_verified=True,
+                auth_provider="gmail",
+            )
+            self._db._session.add(user)
+            self._db._session.commit()
+            self._db._session.refresh(user)
 
         return self._generate_token(user, "user"), user
  

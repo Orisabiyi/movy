@@ -1,19 +1,15 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    Header,
-    Request,
-    status,
-)
+from authlib.integrations.starlette_client import OAuth, OAuthError
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, Request, status
 from fastapi.responses import JSONResponse
+from fastapi.templating import Jinja2Templates
 from main import settings
 from main.auth import Auth
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, Role, login_required
 from main.security import set_cookie
+from starlette.requests import Request
 
 from .models import User, UserToken
 from .open_apidoc import (
@@ -38,7 +34,23 @@ from .schemas import (
 
 router = APIRouter(prefix="/auth/user", tags=["User auth"])
 
+
 AUTH = Auth()
+
+templates = Jinja2Templates(directory="templates")
+
+oauth = OAuth()
+
+oauth.register(
+    name="google",
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_id=settings.GOOGLE_CLIENT_ID,
+    client_secret=settings.GOOGLE_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "email openid profile",
+        "redirect_url": "http://localhost:8000/auth",
+    },
+)
 
 
 @router.post(
@@ -90,13 +102,13 @@ async def verify_user_token_email(
     verify_token["id"] = verify_token["id"].encode()
     token, obj = await AUTH.token_verification(
         User, background_tasks, **VerifyUserToken(**verify_token).model_dump()
-    )
+    )  # type: ignore
     data = {
         "id": obj.id,
         "name": obj.get_name,
         "refresh_token": token["refresh_token"],
         "access_token": token["access_token"],
-    }
+    }  # type: ignore
     resp = JSONResponse(content=data, status_code=200)
     set_cookie(resp, "refresh_token", token["refresh_token"], "/")
     return resp
@@ -108,13 +120,13 @@ async def verify_user_token_email(
 async def user_login(data: UserLoginInSchema, db: DB = Depends(get_db)):
     tokens, obj = await AUTH.get_login_token(data.model_dump(), User)
     data = {
-        "id": obj.id,
-        "name": obj.get_name,
-        "refresh_token": tokens["refresh_token"],
-        "access_token": tokens["access_token"],
-    }
+        "id": obj.id,  # type: ignore
+        "name": obj.get_name,  # type: ignore
+        "refresh_token": tokens["refresh_token"],  # type: ignore
+        "access_token": tokens["access_token"],  # type:ignore
+    }  # type: ignore
     resp = JSONResponse(content=data, status_code=200)
-    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")
+    set_cookie(resp, "refresh_token", tokens["refresh_token"], "/")  # type: ignore
     return resp
 
 
@@ -161,8 +173,39 @@ async def reset_password_endpoint(
 
 
 # TODO oauth2 auth endpoint
+@router.get("/google/login")
+async def login(request: Request):
+    url = request.url_for("auth")
+    return await oauth.google.authorize_redirect(request, url)
 
-# @router.get('/me')
-# @login_required(User)
-# async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.USER, User))):
-#     return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})
+
+@router.get("/callback/auth")
+async def auth(request: Request):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except OAuthError as e:
+        return JSONResponse(content={"message": f"{e.error}"}, status_code=400)
+
+    user = token.get("userinfo")
+    if not user:
+        ...
+    request.session["user"] = dict(user)
+    token, user = await AUTH.oauth_user_auth(dict(user))
+
+    resp = JSONResponse(
+        content={
+            "id": user.id,
+            "access_token": token["access_token"],
+            "refresh_token": token["refresh_token"],
+        },
+        status_code=200
+    )
+    set_cookie(resp, "refresh_token", token["refresh_token"])
+    return resp
+
+
+@router.get("/home")
+def index(request: Request):
+    return templates.TemplateResponse(
+        name="home.html", context={"request": request}
+    )

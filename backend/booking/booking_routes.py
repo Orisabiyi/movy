@@ -1,5 +1,11 @@
+import json
+from io import BytesIO
+
+import qrcode
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from main import settings
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, Role, login_required
 from main.hash_id import decode_id, encode_id
@@ -11,8 +17,10 @@ from users.models import User
 
 from .models import Booking
 from .schemas import (
+    BookingPayment,
     BookingRequest,
     BookingUpdate,
+    TicketRequest,
     UserBookingResponse,
     UserBookingsResponse,
 )
@@ -59,7 +67,9 @@ async def book_movie(
         )
     try:
         booking = Booking(
-            showtime_id=decode_id(data.showtime_id), user_id=current_user.id, price=price
+            showtime_id=decode_id(data.showtime_id),
+            user_id=current_user.id,
+            price=price,
         )
         db._session.add(booking)
         db._session.commit()
@@ -133,7 +143,7 @@ async def get_user_bookings(
                     "movie_start_time": booking.show_time.start_movie_time.strftime(
                         "%H:%M"
                     ),
-                    "price": float(booking.price), #type: ignore
+                    "price": float(booking.price),  # type: ignore
                 },
                 seats=[
                     {
@@ -235,11 +245,71 @@ async def delete_user_booking(
     delete user booking
     """
     b_id = decode_id(booking_id)
-    booking = db._session.query(Booking).filter(Booking.id == b_id, Booking.user_id == current_user.id).first()
+    booking = (
+        db._session.query(Booking)
+        .filter(Booking.id == b_id, Booking.user_id == current_user.id)
+        .first()
+    )
 
     if not booking:
-        return JSONResponse(status_code=404, content={"message": "User booking not found"})
+        return JSONResponse(
+            status_code=404, content={"message": "User booking not found"}
+        )
     db._session.delete(booking)
     db._session.commit()
-    return JSONResponse(status_code=200, content={"message": "User booking deleted successfully"})
+    return JSONResponse(
+        status_code=200,
+        content={"message": "User booking deleted successfully"},
+    )
 
+
+@router.post("/payment")
+@login_required(User)
+async def make_payment(
+    request: Request,
+    data: BookingPayment,
+    db: DB = Depends(get_db),
+    current_user=Depends(PermissionDependency(Role.USER, User)),
+):
+    booking_id = decode_id(data.booking_id)
+    booked = (
+        db._session.query(Booking)
+        .filter(
+            Booking.id == booking_id, Booking.user_id == current_user.user_id
+        )
+        .first()
+    )
+    if not booked:
+        return JSONResponse(
+            content={"message": "Booking not Found"}, status_code=400
+        )
+
+
+    # send user payment to paystack API
+    url = "https://api.paystack.co/transaction/initialize"
+    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
+    post_data = {
+        "email": current_user.email,
+        "amount": f"{booked.price}",
+        "currency": "NGN",
+    }
+    resp = requests.post(url=url, headers=headers, data=post_data)
+
+    if resp.status_code != 200:
+        print(resp.json())
+        return JSONResponse(status_code=400, content=resp.json())
+
+    return JSONResponse(status_code=200, content=resp.json())
+
+
+# TODO generate user ticket
+# @router.post("/generate-tickets")
+# @login_required(User)
+# def generate_qr_code(
+#     request: Request,
+#     db: DB = Depends(get_db),
+#     current_user=Depends(PermissionDependency(Role.USER, User)),
+# ):
+#     """
+#     generate ticket for users to after booking
+#     """
