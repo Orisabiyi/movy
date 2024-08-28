@@ -13,6 +13,9 @@ function Signup() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
+      if (!password || !email)
+        throw new Error("Your password or email is empty");
+
       const res = await fetch(
         "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/signup",
         {
@@ -31,6 +34,8 @@ function Signup() {
 
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
+
+      if (!data) throw new Error("There was an error connecting");
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
