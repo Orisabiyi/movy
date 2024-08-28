@@ -34,6 +34,7 @@ DATABASE_DICT = {
 }
 
 DEBUG = os.getenv("DEBUG")
+TEST_DB=os.getenv("TEST_DB")
 
 MY_SSL_CERT = os.getenv("MY_SSL_CERT") or ""
 # redis hosting platform
