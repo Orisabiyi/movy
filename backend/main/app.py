@@ -5,7 +5,7 @@ from typing import List, Optional, TypeVar
 from main import settings
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination, paginate
 from movies.api_doc import lst_movie_response
