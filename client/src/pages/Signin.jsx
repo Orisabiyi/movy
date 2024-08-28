@@ -11,7 +11,7 @@ function Signin() {
     e.preventDefault();
     try {
       const res = await fetch(
-        "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/signup",
+        "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/login",
         {
           method: "POST",
           headers: {

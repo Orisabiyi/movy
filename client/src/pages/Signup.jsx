@@ -30,7 +30,9 @@ function Signup() {
 
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
-      console.log(data);
+
+      sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
+      localStorage.setItem("accessToken", JSON.stringify(data.refresh_token));
     } catch (error) {
       console.log(error.message);
     }
