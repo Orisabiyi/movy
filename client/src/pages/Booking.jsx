@@ -2,7 +2,8 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 function Booking() {
-  const { id } = useParams();
+  const { id, screen } = useParams();
+  console.log(screen);
   useEffect(
     function () {
       async function getMovies() {
