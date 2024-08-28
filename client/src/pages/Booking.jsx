@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 function Booking() {
   const { id, screen } = useParams();
-  console.log(screen);
+  const [{ theatre_name: theatreName }, setCurTheatre] = useState("");
+
   useEffect(
     function () {
       async function getMovies() {
@@ -13,7 +14,12 @@ function Booking() {
           );
           const data = await res.json();
 
-          console.log(data);
+          const matchingTheatre = data.theatres.find(
+            (theatre) => theatre.theatre_name === screen
+          );
+
+          setCurTheatre(matchingTheatre);
+          // console.log(data.theatres);
         } catch (error) {
           console.log(error.message);
         }
@@ -21,13 +27,13 @@ function Booking() {
 
       getMovies();
     },
-    [id]
+    [id, screen]
   );
 
   return (
     <main>
-      <section>
-        <div></div>
+      <section className="flex flex-col h-screen">
+        <div className="h-[40%]">{theatreName}</div>
         <div></div>
       </section>
     </main>
