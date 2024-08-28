@@ -32,7 +32,7 @@ function Signup() {
       const data = text ? JSON.parse(text) : {};
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
-      localStorage.setItem("accessToken", JSON.stringify(data.refresh_token));
+      localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
     } catch (error) {
       console.log(error.message);
     }
