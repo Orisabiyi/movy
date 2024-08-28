@@ -36,7 +36,7 @@ function Signin() {
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
 
-      navigate("booking");
+      navigate(`/${id}/${theater}/booking`);
     } catch (error) {
       console.log(error.message);
     }
