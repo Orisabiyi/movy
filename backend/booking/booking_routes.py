@@ -1,7 +1,3 @@
-import json
-from io import BytesIO
-
-import qrcode
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -22,7 +18,6 @@ from .schemas import (
     BookingRequest,
     BookingUpdate,
     BookingVerifyTransaction,
-    TicketRequest,
     UserBookingResponse,
     UserBookingsResponse,
 )
