@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+
+  const { id, theater } = useParams();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -98,6 +100,16 @@ function Signup() {
             Create Account
           </button>
         </div>
+
+        <p className="text-[1.5rem]">
+          Already have an account{" "}
+          <Link
+            to={`/${id}/${theater}/signin`}
+            className="underline text-orange-700"
+          >
+            Login
+          </Link>
+        </p>
       </form>
     </section>
   );
