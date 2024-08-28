@@ -6,6 +6,7 @@ import { Route } from "react-router-dom";
 import Theater from "./pages/Theater";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
+import Booking from "./pages/Booking";
 
 function App() {
   return (
@@ -16,8 +17,8 @@ function App() {
         <Route path="/:id/:theater" element={<Theater />}>
           <Route path="/:id/:theater/signup" element={<Signup />} />
           <Route path="/:id/:theater/signin" element={<Signin />} />
-          <Route path="/:id/:theater/booking" element={<Signin />} />
         </Route>
+        <Route path="/:id/booking" element={<Booking />} />
       </Routes>
     </BrowserRouter>
   );
