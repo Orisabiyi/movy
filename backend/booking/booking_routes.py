@@ -85,7 +85,7 @@ async def book_movie(
 
     return JSONResponse(
         status_code=201,
-        content={"message": "Booking successful", "booking_id": encode_id(booking.id)},
+        content={"message": "Booking successful", "booking_id": encode_id(booking.id)},#type: ignore
     )
 
 
@@ -285,7 +285,6 @@ async def make_payment(
 
     # send user payment to paystack API
     url = "https://api.paystack.co/transaction/initialize"
-    print(int(booked.price))
     headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
     post_data = {
         "email": current_user.email,
