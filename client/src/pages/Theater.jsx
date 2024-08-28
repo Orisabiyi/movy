@@ -68,7 +68,7 @@ function Theater() {
                 <h3
                   className="h-[40%] flex justify-center items-center bg-orange-400 text-white text-[1.8rem] text-center font-bold"
                   style={{
-                    background: "url(../../public/red-curtain.jpg)",
+                    background: "url(/public/red-curtain.jpg)",
                     backgroundSize: "150%",
                     backgroundPosition: "top",
                   }}
