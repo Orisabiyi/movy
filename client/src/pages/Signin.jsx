@@ -5,7 +5,7 @@ function Signin() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const { id, theater } = useParams();
+  const { id, theater, screen } = useParams();
   const navigate = useNavigate("");
 
   async function handleSubmit(e) {
@@ -36,7 +36,7 @@ function Signin() {
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
 
-      navigate(`/${id}/booking`);
+      navigate(`/${id}/${screen}/booking`);
     } catch (error) {
       console.log(error.message);
     }

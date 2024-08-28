@@ -15,10 +15,10 @@ function App() {
         <Route path="/" element={<Homepage />} />
         <Route path="/:id" element={<MovieDetails />} />
         <Route path="/:id/:theater" element={<Theater />}>
-          <Route path="/:id/:theater/signup" element={<Signup />} />
-          <Route path="/:id/:theater/signin" element={<Signin />} />
+          <Route path="/:id/:theater/:screen/signup" element={<Signup />} />
+          <Route path="/:id/:theater/:screen/signin" element={<Signin />} />
         </Route>
-        <Route path="/:id/booking" element={<Booking />} />
+        <Route path="/:id/:screen/booking" element={<Booking />} />
       </Routes>
     </BrowserRouter>
   );

@@ -7,7 +7,7 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const { id, theater } = useParams();
+  const { id, screen, theater } = useParams();
   const navigate = useNavigate("");
 
   async function handleSubmit(e) {
@@ -114,7 +114,7 @@ function Signup() {
         <p className="text-[1.5rem]">
           Already have an account{" "}
           <Link
-            to={`/${id}/${theater}/signin`}
+            to={`/${id}/${theater}/${screen}/signin`}
             className="underline text-orange-700"
           >
             Login

@@ -84,7 +84,7 @@ function Theater() {
                       <Link
                         key={screenName}
                         className="flex flex-col gap-[.3rem] leading-5 px-[3rem] py-[1rem] font-semibold rounded-[50rem] border-orange-700 border-b-[2px] text-[1.3rem] hover:bg-orange-700 hover:text-white"
-                        to="signup"
+                        to={`${screenName}/signup`}
                       >
                         <span>Screen name: {screenName}</span>
                         <span>Seats Left: {seatRemaining}</span>
