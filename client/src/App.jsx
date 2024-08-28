@@ -5,6 +5,7 @@ import MovieDetails from "./pages/MovieDetails";
 import { Route } from "react-router-dom";
 import Theater from "./pages/Theater";
 import Signup from "./pages/Signup";
+import Signin from "./pages/Signin";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/:id" element={<MovieDetails />} />
         <Route path="/:id/:theater" element={<Theater />}>
           <Route path="/:id/:theater/signup" element={<Signup />} />
+          <Route path="/:id/:theater/signin" element={<Signin />} />
         </Route>
       </Routes>
     </BrowserRouter>
