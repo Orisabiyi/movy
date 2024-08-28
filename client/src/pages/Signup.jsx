@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 function Signup() {
   const [firstName, setFirstName] = useState("");
@@ -8,6 +8,7 @@ function Signup() {
   const [email, setEmail] = useState("");
 
   const { id, theater } = useParams();
+  const navigate = useNavigate("");
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -33,6 +34,8 @@ function Signup() {
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
+
+      navigate("booking");
     } catch (error) {
       console.log(error.message);
     }
