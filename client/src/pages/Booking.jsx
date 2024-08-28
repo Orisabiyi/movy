@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 function Booking() {
   const { id, screen } = useParams();
-  const [{ theatre_name: theatreName }, setCurTheatre] = useState("");
+  const [{ theatre_name: theatreName, screens }, setCurTheatre] = useState("");
 
   useEffect(
     function () {
@@ -32,9 +32,24 @@ function Booking() {
 
   return (
     <main>
-      <section className="flex flex-col h-screen">
-        <div className="h-[40%]">{theatreName}</div>
-        <div></div>
+      <section className="flex flex-col items-center justify-center gap-[2rem] h-screen px-[6rem] py-[3rem]">
+        <div className="h-[20%] w-full flex flex-col items-center justify-center">
+          {theatreName}
+        </div>
+        <ul className="flex-1 grid grid-cols-10 gap-8 w-full">
+          {screens &&
+            screens[0].seats.map(
+              ({ seat_number: seatNumber, seat_id: seatId, row }) => (
+                <li
+                  key={seatId}
+                  className="flex flex-col items-center justify-center bg-orange-400 rounded-tr-[1.5rem] rounded-tl-[1.5rem] leading-6 text-[1.3rem]"
+                >
+                  <span>{`Seat ${seatNumber}`}</span>
+                  <span>{`Row ${row}`}</span>
+                </li>
+              )
+            )}
+        </ul>
       </section>
     </main>
   );
