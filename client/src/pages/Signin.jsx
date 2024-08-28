@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 function Signin() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
   const { id, theater } = useParams();
+  const navigate = useNavigate("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
+      if (!password || !email)
+        throw new Error("Your password or email is empty");
+
       const res = await fetch(
         "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/login",
         {
@@ -27,8 +31,12 @@ function Signin() {
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
 
+      if (!data) throw new Error("There was an error connecting");
+
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
+
+      navigate("booking");
     } catch (error) {
       console.log(error.message);
     }
