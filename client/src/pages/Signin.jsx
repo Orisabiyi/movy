@@ -90,7 +90,7 @@ function Signin() {
         <p className="text-[1.5rem]">
           Do not have an account{" "}
           <Link
-            to={`/${id}/${theater}/signup`}
+            to={`/${id}/${theater}/${screen}/signup`}
             className="underline text-orange-700"
           >
             Signup
