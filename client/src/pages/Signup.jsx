@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Signup() {
   const [firstName, setFirstName] = useState("");
@@ -30,7 +30,7 @@ function Signup() {
       const data = text ? JSON.parse(text) : {};
       console.log(data);
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     }
   }
 
@@ -38,7 +38,7 @@ function Signup() {
     <section className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-80 flex items-center justify-center">
       <form
         action=""
-        className="w-[40%] h-[70%] bg-gray-50 flex flex-col items-center justify-center gap-[3rem] rounded-[1rem] py-[2rem]"
+        className="w-[40%] h-auto bg-gray-50 flex flex-col items-center justify-center gap-[3rem] rounded-[1rem] py-[2rem]"
         onSubmit={handleSubmit}
       >
         <figure className="flex items-center justify-center gap-[1rem] h-auto">
