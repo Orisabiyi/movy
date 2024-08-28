@@ -10,9 +10,10 @@ from sqlalchemy.orm import joinedload
 from theatre.models import ShowTime
 from theatre.theatre_management.models import Screen, Seat
 from users.models import User
-
+from datetime import datetime, timedelta
+import pyotp
 from main.util_files import unique_string
-from .models import Booking, booking_seat, BookingStatus, Ticket
+from .models import Booking, booking_seat, BookingStatus, Tokens
 from .schemas import (
     BookingPayment,
     BookingRequest,
@@ -84,7 +85,7 @@ async def book_movie(
 
     return JSONResponse(
         status_code=201,
-        content={"message": "Booking successful", "booking_id": booking.id},
+        content={"message": "Booking successful", "booking_id": encode_id(booking.id)},
     )
 
 
@@ -284,10 +285,11 @@ async def make_payment(
 
     # send user payment to paystack API
     url = "https://api.paystack.co/transaction/initialize"
+    print(int(booked.price))
     headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
     post_data = {
         "email": current_user.email,
-        "amount": int(booked.price), #type: ignore
+        "amount": int(booked.price) * 100, #type: ignore
         "currency": "NGN",
     }
     resp = requests.post(url=url, headers=headers, json=post_data)
@@ -328,7 +330,6 @@ async def verify_user_booking_payment(
     resp = requests.get(url=url, headers=headers)
     try:
         response = resp.json()
-        print(response)
         if response["data"]["status"] != "success":
             return JSONResponse(content="Unsuccessful transaction", status_code=400)
     except (requests.RequestException, requests.ReadTimeout) as e:
@@ -339,26 +340,18 @@ async def verify_user_booking_payment(
     booking.status = BookingStatus.CONFIRMED #type: ignore
     db._session.commit()
 
-    # generate user ticket
-
-    ticket = Ticket(
-        ticket_number=unique_string(50),
-        booking_id=booking.id,
-        user_id=current_user.id,
-        theatre_id=booking.show_time.screen.theatre.id,
-        movie_id=booking.show_time.movies.id,
-        expires_at=booking.show_time.expires_at,
-        screen_id=booking.show_time.screen.id,
+    # generate user token key
+    totp = pyotp.TOTP('base32secret3232')
+    token = Tokens(
+        otp_code = int(totp.now()),
+        booking_id = booking.id,
+        user_id = current_user.id,
+        theatre_id = booking.show_time.screen.theatre.id,
+        expires_at = booking.show_time.expires_at + timedelta(hours=30)
     )
-    ticket.seats.append(booking.seats)
+    db._session.add(token)
     db._session.commit()
-    db._session.refresh(ticket)
-    ticket_info = {
-        "viewer": f"{booking.user.first_name} {booking.user.last_name}",
-        "theatre_name": booking.show_time.screen.theatre.name,
-        "screen": booking.show_time.screen.screen_name,
-        "booking_status": booking.status.value,
-        "movie": booking.show_time.movies.title,
-        "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats]
-    }
-    return JSONResponse(status_code=200, content=ticket_info)
+    db._session.refresh(token)
+    token_dict = {"otp_code": token.otp_code, "expirest_at": token.expires_at.strftime("%Y-%m-%dT%H:%M:%S")}
+    return JSONResponse(status_code=200, content=token_dict)
+

@@ -37,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET)
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET) #type: ignore
 
 
 @app.get(
