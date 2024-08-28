@@ -124,6 +124,7 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+test_user.py
 # Environments
 .env
 .venv
@@ -132,7 +133,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+.test.env
 
 uuid
 random

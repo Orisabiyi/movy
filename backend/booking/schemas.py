@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Union
 
 from pydantic import BaseModel
+from sqlalchemy import Tuple
 
 
 
@@ -55,3 +56,15 @@ class UserBookingsResponse(BaseModel):
 
 class BookingUpdate(BaseModel):
     seats: List[str]
+
+
+class TicketRequest(BaseModel):
+    booking_id: str
+
+
+class BookingPayment(BaseModel):
+    booking_id: str
+
+class BookingVerifyTransaction(BaseModel):
+    booking_id: str
+    reference: str

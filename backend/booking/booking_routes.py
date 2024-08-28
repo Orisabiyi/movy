@@ -1,5 +1,11 @@
+import json
+from io import BytesIO
+
+import qrcode
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from main import settings
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, Role, login_required
 from main.hash_id import decode_id, encode_id
@@ -9,10 +15,14 @@ from theatre.models import ShowTime
 from theatre.theatre_management.models import Screen, Seat
 from users.models import User
 
-from .models import Booking
+from main.util_files import unique_string
+from .models import Booking, booking_seat, BookingStatus, Ticket
 from .schemas import (
+    BookingPayment,
     BookingRequest,
     BookingUpdate,
+    BookingVerifyTransaction,
+    TicketRequest,
     UserBookingResponse,
     UserBookingsResponse,
 )
@@ -59,7 +69,9 @@ async def book_movie(
         )
     try:
         booking = Booking(
-            showtime_id=decode_id(data.showtime_id), user_id=current_user.id, price=price
+            showtime_id=decode_id(data.showtime_id),
+            user_id=current_user.id,
+            price=price,
         )
         db._session.add(booking)
         db._session.commit()
@@ -133,7 +145,7 @@ async def get_user_bookings(
                     "movie_start_time": booking.show_time.start_movie_time.strftime(
                         "%H:%M"
                     ),
-                    "price": float(booking.price), #type: ignore
+                    "price": float(booking.price),  # type: ignore
                 },
                 seats=[
                     {
@@ -235,11 +247,123 @@ async def delete_user_booking(
     delete user booking
     """
     b_id = decode_id(booking_id)
-    booking = db._session.query(Booking).filter(Booking.id == b_id, Booking.user_id == current_user.id).first()
+    booking = (
+        db._session.query(Booking)
+        .filter(Booking.id == b_id, Booking.user_id == current_user.id)
+        .first()
+    )
 
     if not booking:
-        return JSONResponse(status_code=404, content={"message": "User booking not found"})
+        return JSONResponse(
+            status_code=404, content={"message": "User booking not found"}
+        )
     db._session.delete(booking)
     db._session.commit()
-    return JSONResponse(status_code=200, content={"message": "User booking deleted successfully"})
+    return JSONResponse(
+        status_code=200,
+        content={"message": "User booking deleted successfully"},
+    )
 
+
+@router.post("/payment")
+@login_required(User)
+async def make_payment(
+    request: Request,
+    data: BookingPayment,
+    db: DB = Depends(get_db),
+    current_user=Depends(PermissionDependency(Role.USER, User)),
+):
+    booking_id = decode_id(data.booking_id)
+    booked = (
+        db._session.query(Booking)
+        .filter(
+            Booking.id == booking_id, Booking.user_id == current_user.id
+        )
+        .first()
+    )
+    if not booked:
+        return JSONResponse(
+            content={"message": "Booking not Found"}, status_code=400
+        )
+
+
+    # send user payment to paystack API
+    url = "https://api.paystack.co/transaction/initialize"
+    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
+    post_data = {
+        "email": current_user.email,
+        "amount": int(booked.price), #type: ignore
+        "currency": "NGN",
+    }
+    resp = requests.post(url=url, headers=headers, json=post_data)
+
+    if resp.status_code != 200:
+        print(resp.json())
+        return JSONResponse(status_code=400, content=resp.json())
+
+    return JSONResponse(status_code=200, content=resp.json())
+
+
+@router.post("/verify-payment")
+@login_required(User)
+async def verify_user_booking_payment(
+    request: Request,
+    data: BookingVerifyTransaction,
+    db: DB = Depends(get_db),
+    current_user = Depends(PermissionDependency(Role.USER, User))
+):
+    book_id = decode_id(data.booking_id)
+
+    booking = (
+        db._session.query(Booking)
+        .filter(Booking.id == book_id, Booking.user_id == current_user.id)
+        .options(
+            joinedload(Booking.show_time)
+            .joinedload(ShowTime.screen)
+            .joinedload(Screen.theatre),
+            joinedload(Booking.show_time).joinedload(ShowTime.movies),
+            # joinedload(Booking.seats).joinedload(BookingSeat.seat),
+        )
+        .first()
+    )
+
+    url = f"https://api.paystack.co/transaction/verify/{data.reference}"
+    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}# type: ignore
+
+    resp = requests.get(url=url, headers=headers)
+    try:
+        response = resp.json()
+        print(response)
+        if response["data"]["status"] != "success":
+            return JSONResponse(content="Unsuccessful transaction", status_code=400)
+    except (requests.RequestException, requests.ReadTimeout) as e:
+        return JSONResponse(f"Network error: {e}", status_code=500)
+
+    if not booking:
+        return JSONResponse(status_code =404, content={"message": "Booking for user not found"})
+    booking.status = BookingStatus.CONFIRMED #type: ignore
+    db._session.commit()
+
+    # generate user ticket
+
+    ticket = Ticket(
+        ticket_number=unique_string(50),
+        booking_id=booking.id,
+        user_id=current_user.id,
+        theatre_id=booking.show_time.screen.theatre.id,
+        movie_id=booking.show_time.movies.id,
+        expires_at=booking.show_time.expires_at,
+        screen_id=booking.show_time.screen.id,
+    )
+    ticket.seats.append(booking.seats)
+    db._session.commit()
+    db._session.refresh(ticket)
+    ticket_info = {
+        "viewer": f"{booking.user.first_name} {booking.user.last_name}",
+        "theatre_name": booking.show_time.screen.theatre.name,
+        "screen": booking.show_time.screen.screen_name,
+        "booking_status": booking.status.value,
+        "movie": booking.show_time.movies.title,
+        "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats]
+    }
+    return JSONResponse(status_code=200, content=ticket_info)

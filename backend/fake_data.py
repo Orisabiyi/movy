@@ -91,7 +91,7 @@ def create_theatres_and_associate_movies(session: DB):
             # Generate seats with rows labeled A-Z and random seat numbers
             rows = [chr(i) for i in range(ord("A"), ord("Z") + 1)]  # Generate row labels A-Z
             for row in random.sample(rows, min(len(rows), random.randint(5, 10))):  # Pick a random number of rows
-                for seat_number in range(1, screen.capacity // len(rows) + 1):  # Distribute seats evenly across rows
+                for seat_number in range(1, screen.capacity // len(rows) + 1):  # type: ignore Distribute seats evenly across rows
                     seat = Seat(
                         screen_id=screen.id,
                         row=row,
