@@ -31,13 +31,13 @@ booking_seat = Table(
     Column("booking_id", Integer, ForeignKey("bookings.id")),
 )
 
-# ticket_seat = Table(
-#     "ticket_seat",
-#     Base.metadata,
-#     Column("id", Integer, primary_key=True, autoincrement=True),
-#     Column("ticket_id", Integer, ForeignKey("ticket.id")),
-#     Column("seat_id", Integer, ForeignKey("seat.id")),
-# )
+ticket_seat = Table(
+    "ticket_seat",
+    Base.metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("ticket_id", Integer, ForeignKey("ticket.id")),
+    Column("seat_id", Integer, ForeignKey("seat.id")),
+)
 
 
 class Booking(Base):
@@ -63,33 +63,22 @@ class Booking(Base):
     )
 
 
-# class Ticket(Base):
-#     __tablename__ = "ticket"
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     ticket_number = Column(String(200), unique=True, nullable=False)  # Unique ticket number or ID
-#     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
-#     user_id = Column(String(100), ForeignKey("users.id"), nullable=False)
-#     theatre_id = Column(String(100), ForeignKey("theatre.id"), nullable=False)
-#     movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)  # Added movie_id
-#     seat_id = Column(Integer, ForeignKey("seat.id"), nullable=False)
-#     screen_id = Column(Integer, ForeignKey("screen.id"), nullable=False)
-#     issued_at = Column(DateTime, server_default=func.now(), nullable=False)  # When the ticket was issued
-#     expires_at = Column(DateTime, nullable=False)
-#     qr_code_path = Column(String(500), nullable=True)  # Path to a QR code for the ticket (if applicable)
+class Ticket(Base):
+    __tablename__ = "ticket"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_number = Column(String(200), unique=True, nullable=False)  # Unique ticket number or ID
+    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
+    user_id = Column(String(100), ForeignKey("users.id"), nullable=False)
+    theatre_id = Column(String(100), ForeignKey("theatre.id"), nullable=False)
+    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)  # Added movie_id
+    seat_id = Column(Integer, ForeignKey("seat.id"), nullable=False)
+    screen_id = Column(Integer, ForeignKey("screen.id"), nullable=False)
+    issued_at = Column(DateTime, server_default=func.now(), nullable=False)  # When the ticket was issued
+    expires_at = Column(DateTime, nullable=False)
 
-#     # Relationships
-#     booking = relationship("Booking", backref="tickets")
-#     user = relationship("User", backref="tickets")
-#     seat = relationship("Seat",secondary=ticket_seat, backref="tickets")
-#     movie = relationship("Movie", backref="tickets")
-#     screen = relationship("Screen", backref="tickets")
-
-
-# class BookingStatus(Base):
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     status = Column(String(50))
-#     user_id = mapped_column(ForeignKey("users.id"))
-#     booking_id = mapped_column(ForeignKey("bookings.id"))
-
-#     user = relationship("User", back_ref="booking_status")
-#     booking = relationship("Booking", back_ref="booking_status")
+    # Relationships
+    booking = relationship("Booking", backref="tickets")
+    user = relationship("User", backref="tickets")
+    seats = relationship("Seat",secondary=ticket_seat, backref="tickets")
+    movie = relationship("Movie", backref="tickets")
+    screen = relationship("Screen", backref="tickets")

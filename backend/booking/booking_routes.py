@@ -15,7 +15,8 @@ from theatre.models import ShowTime
 from theatre.theatre_management.models import Screen, Seat
 from users.models import User
 
-from .models import Booking, booking_seat, BookingStatus
+from main.util_files import unique_string
+from .models import Booking, booking_seat, BookingStatus, Ticket
 from .schemas import (
     BookingPayment,
     BookingRequest,
@@ -291,7 +292,7 @@ async def make_payment(
     headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
     post_data = {
         "email": current_user.email,
-        "amount": int(booked.price),
+        "amount": int(booked.price), #type: ignore
         "currency": "NGN",
     }
     resp = requests.post(url=url, headers=headers, json=post_data)
@@ -343,6 +344,20 @@ async def verify_user_booking_payment(
     booking.status = BookingStatus.CONFIRMED #type: ignore
     db._session.commit()
 
+    # generate user ticket
+
+    ticket = Ticket(
+        ticket_number=unique_string(50),
+        booking_id=booking.id,
+        user_id=current_user.id,
+        theatre_id=booking.show_time.screen.theatre.id,
+        movie_id=booking.show_time.movies.id,
+        expires_at=booking.show_time.expires_at,
+        screen_id=booking.show_time.screen.id,
+    )
+    ticket.seats.append(booking.seats)
+    db._session.commit()
+    db._session.refresh(ticket)
     ticket_info = {
         "viewer": f"{booking.user.first_name} {booking.user.last_name}",
         "theatre_name": booking.show_time.screen.theatre.name,
@@ -351,5 +366,4 @@ async def verify_user_booking_payment(
         "movie": booking.show_time.movies.title,
         "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats]
     }
-    print(ticket_info)
     return JSONResponse(status_code=200, content=ticket_info)
