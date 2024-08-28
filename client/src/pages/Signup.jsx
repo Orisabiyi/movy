@@ -40,7 +40,7 @@ function Signup() {
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
 
-      navigate(`/${id}/booking`);
+      navigate(`/${id}/${screen}/booking`);
     } catch (error) {
       console.log(error.message);
     }
