@@ -33,7 +33,7 @@ DATABASE_DICT = {
     "PORT": PORT,
 }
 
-TEST_DB = os.getenv("TEST_DB")
+DEBUG = os.getenv("DEBUG")
 
 MY_SSL_CERT = os.getenv("MY_SSL_CERT") or ""
 # redis hosting platform
@@ -42,7 +42,7 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_USER = os.getenv("REDIS_USER", "")
 REDIS_URI = os.getenv("REDIS_URI", "")
-HOST_APP = "http://localhost:8000"
+HOST_APP = "http://localhost:8000" if DEBUG else "https://movy-sigma.vercel.app"
 
 
 # cryptography hash
