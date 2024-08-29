@@ -92,7 +92,6 @@ function Booking() {
       if (!data) throw new Error("There error connecting");
 
       setBookingId(data.booking_id);
-
       navigate(`/${id}/${screen}/${bookingId}`);
     } catch (error) {
       console.log(error.message);
