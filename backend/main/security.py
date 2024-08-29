@@ -1,9 +1,6 @@
-from datetime import datetime, timedelta, timezone
+import base64
 import logging
-from fastapi import HTTPException,status
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
-from .database import DB
+from datetime import datetime, timedelta, timezone
 from string import (
     ascii_lowercase,
     ascii_uppercase,
@@ -11,13 +8,16 @@ from string import (
     punctuation,
     whitespace,
 )
-import base64
+from typing import Dict, Tuple
+
 import jwt
+from fastapi import HTTPException, status
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
+
 from . import settings
-
-from typing import Tuple, Dict
+from .database import DB
 from .util_files import unique_string
-
 
 ALGORITHM = "HS256"
 
@@ -28,11 +28,13 @@ User login setup
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 db = DB()
 
+
 def str_encode(string: str) -> str:
-    return base64.b64encode(string.encode('ascii')).decode('ascii')
+    return base64.b64encode(string.encode("ascii")).decode("ascii")
+
 
 def str_decode(string: str) -> str:
-    return base64.b64decode(string.encode('ascii')).decode('ascii')
+    return base64.b64decode(string.encode("ascii")).decode("ascii")
 
 
 # decode jwt token
@@ -51,12 +53,14 @@ def get_token_payload(token: str, secret_key: str):
         raise credentials_exception
     return payload
 
+
 # generate jwt token
-def generate_token_payload(payload: Dict, secret_key,expired_at: timedelta) -> str:
+def generate_token_payload(
+    payload: Dict, secret_key, expired_at: timedelta
+) -> str:
     expiry = datetime.now() + expired_at
     payload["exp"] = expiry
     return jwt.encode(payload=payload, key=secret_key, algorithm=ALGORITHM)
-
 
 
 async def get_current_user_or_theatre(token: str, secret_key, klass):
@@ -64,13 +68,15 @@ async def get_current_user_or_theatre(token: str, secret_key, klass):
     payload = get_token_payload(token, secret_key)
     print(payload)
     if payload:
-        user = await load_user(klass, id=str_decode(payload.get('sub'))) #type: ignore
-        if user and user.id == str_decode(payload.get('sub')):
+        user = await load_user(klass, id=str_decode(payload.get("sub")))  # type: ignore
+        if user and user.id == str_decode(payload.get("sub")):
             return user
     return None
 
+
 async def load_user(klass, **kwargs):
     from sqlalchemy.exc import NoResultFound
+
     try:
         user = db.get(klass, **kwargs)
     except NoResultFound as e:
@@ -78,6 +84,7 @@ async def load_user(klass, **kwargs):
         user = None
 
     return user
+
 
 # check for strong password
 def password_is_valid(password: str) -> Tuple[bool, str]:
@@ -146,13 +153,8 @@ def set_cookie(resp: JSONResponse, key: str, value: str, path: str = ""):
             value=value,
             httponly=True,
             path=path,
-            expires=datetime.now(timezone.utc) + timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN),
+            expires=datetime.now(timezone.utc)
+            + timedelta(minutes=settings.REFRESH_TOKEN_IN_MIN),
+            samesite=None,
+            secure=False
         )
-    else:
-        resp.set_cookie(
-            key=key,
-            value=value,
-            httponly=True,
-            expires=datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_IN_MIN),
-        )
-        
