@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 function Booking() {
   const { id, screen } = useParams();
   const [{ theatre_name: theatreName, screens }, setCurTheatre] = useState("");
+  const [bookingId, setBookingId] = useState();
 
   useEffect(
     function () {
@@ -29,34 +30,36 @@ function Booking() {
     },
     [id, screen]
   );
-  async function refreshToken() {
-    try {
-      const refreshToken = JSON.parse(localStorage.getItem("refreshToken"));
 
-      const res = await fetch(
-        "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/refresh",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        }
-      );
+  // async function refreshToken() {
+  //   try {
+  //     const res = await fetch(
+  //       "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/refresh",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //       }
+  //     );
 
-      const data = await res.json();
+  //     console.log(res);
 
-      if (!res.ok) throw new Error(`Failed to refresh token: ${data.message}`);
+  //     const data = await res.json();
+  //     console.log(data);
 
-      sessionStorage.setItem("accessToken", JSON.stringify(data.accessToken));
-    } catch (error) {
-      console.log(error.message);
-    }
-  }
+  //     if (!res.ok) throw new Error(`Failed to refresh token: ${data.message}`);
+
+  //     sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
+  //   } catch (error) {
+  //     console.log(error.message);
+  //   }
+  // }
 
   async function selectSeat(seatId) {
     try {
-      await refreshToken();
+      // await refreshToken();
       const accessToken = JSON.parse(sessionStorage.getItem("accessToken"));
 
       const res = await fetch(
@@ -64,6 +67,7 @@ function Booking() {
         {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
 
@@ -80,10 +84,9 @@ function Booking() {
 
       console.log(screens.at(0).showtimes.at(0).showtime_id, seatId);
       const data = await res.json();
-
       if (!data) throw new Error("There error connecting");
 
-      console.log(data);
+      setBookingId(data.booking_id);
     } catch (error) {
       console.log(error.message);
     }

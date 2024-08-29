@@ -25,6 +25,8 @@ function Signin() {
             password: password,
             email: email,
           }),
+
+          credentials: "include",
         }
       );
 
@@ -44,6 +46,9 @@ function Signin() {
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
+
+      // When you receive the refresh token, set it in a cookie
+      // document.cookie = `refresh_token=${data.refresh_token}; path=/; secure; SameSite=Strict`;
 
       navigate(`/${id}/${screen}/booking`);
     } catch (error) {
