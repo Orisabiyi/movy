@@ -25,6 +25,7 @@ class PermissionDependency:
             )
         token = token.split(" ")[1]
         user = await get_current_user_or_theatre(token, settings.ACCESS_TOKEN_SECRET_KEY, self.klass)
+        print(user)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
