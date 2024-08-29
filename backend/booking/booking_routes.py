@@ -50,7 +50,6 @@ async def book_movie(
         return JSONResponse(
             status_code=404, content={"message": "Show Time not found"}
         )
-
     seat_ids = [decode_id(seat.seat_id) for seat in data.seats]
     price = 0
     for seat in seat_ids:
