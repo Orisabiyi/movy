@@ -68,3 +68,7 @@ class BookingPayment(BaseModel):
 class BookingVerifyTransaction(BaseModel):
     booking_id: str
     reference: str
+
+
+class VerifyOtpToken(BaseModel):
+    code: int

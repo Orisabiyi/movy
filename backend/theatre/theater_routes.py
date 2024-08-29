@@ -156,7 +156,3 @@ async def theatre_reset_password(
         status_code=200,
     )
 
-# @router.get('/me')
-# @login_required(Theatre)
-# async def get_me(request: Request, current_user = Depends(PermissionDependency(Role.THEATRE, Theatre))):
-#     return JSONResponse(content={"message": f"Oh my user {current_user.get_name}"})

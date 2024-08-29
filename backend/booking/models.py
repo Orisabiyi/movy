@@ -31,13 +31,6 @@ booking_seat = Table(
     Column("booking_id", Integer, ForeignKey("bookings.id")),
 )
 
-ticket_seat = Table(
-    "ticket_seat",
-    Base.metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("ticket_id", Integer, ForeignKey("ticket.id")),
-    Column("seat_id", Integer, ForeignKey("seat.id")),
-)
 
 
 class Booking(Base):
@@ -62,23 +55,15 @@ class Booking(Base):
         UniqueConstraint("showtime_id", "user_id", name="uniq_user_showtime"),
     )
 
-
-class Ticket(Base):
-    __tablename__ = "ticket"
+class Tokens(Base):
+    __tablename__ = "token"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ticket_number = Column(String(200), unique=True, nullable=False)  # Unique ticket number or ID
-    booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=False)
-    user_id = Column(String(100), ForeignKey("users.id"), nullable=False)
-    theatre_id = Column(String(100), ForeignKey("theatre.id"), nullable=False)
-    movie_id = Column(Integer, ForeignKey("movies.id"), nullable=False)  # Added movie_id
-    seat_id = Column(Integer, ForeignKey("seat.id"), nullable=False)
-    screen_id = Column(Integer, ForeignKey("screen.id"), nullable=False)
-    issued_at = Column(DateTime, server_default=func.now(), nullable=False)  # When the ticket was issued
-    expires_at = Column(DateTime, nullable=False)
+    otp_code = Column(Integer, unique=True, nullable=True)
+    booking_id = mapped_column(ForeignKey("bookings.id"))
+    user_id = mapped_column(ForeignKey("users.id"))
+    theatre_id = mapped_column(ForeignKey("theatre.id"))
+    expires_at = Column(DateTime)
 
-    # Relationships
-    booking = relationship("Booking", backref="tickets")
-    user = relationship("User", backref="tickets")
-    seats = relationship("Seat",secondary=ticket_seat, backref="tickets")
-    movie = relationship("Movie", backref="tickets")
-    screen = relationship("Screen", backref="tickets")
+    user = relationship("User", backref="otp_tokens")
+    booking = relationship("Booking", backref="booking")
+    theatre = relationship("Theatre", backref="booking")

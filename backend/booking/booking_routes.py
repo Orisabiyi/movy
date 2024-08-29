@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+import pyotp
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -5,14 +8,14 @@ from main import settings
 from main.database import DB, get_db
 from main.decorators import PermissionDependency, Role, login_required
 from main.hash_id import decode_id, encode_id
+from main.util_files import unique_string
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from theatre.models import ShowTime
+from theatre.models import ShowTime, Theatre
 from theatre.theatre_management.models import Screen, Seat
 from users.models import User
 
-from main.util_files import unique_string
-from .models import Booking, booking_seat, BookingStatus, Ticket
+from .models import Booking, BookingStatus, Tokens, booking_seat
 from .schemas import (
     BookingPayment,
     BookingRequest,
@@ -20,6 +23,7 @@ from .schemas import (
     BookingVerifyTransaction,
     UserBookingResponse,
     UserBookingsResponse,
+    VerifyOtpToken,
 )
 
 router = APIRouter(prefix="/booking", tags=["MOVY BOOKING"])
@@ -84,7 +88,7 @@ async def book_movie(
 
     return JSONResponse(
         status_code=201,
-        content={"message": "Booking successful", "booking_id": booking.id},
+        content={"message": "Booking successful", "booking_id": encode_id(booking.id)},  # type: ignore
     )
 
 
@@ -271,9 +275,7 @@ async def make_payment(
     booking_id = decode_id(data.booking_id)
     booked = (
         db._session.query(Booking)
-        .filter(
-            Booking.id == booking_id, Booking.user_id == current_user.id
-        )
+        .filter(Booking.id == booking_id, Booking.user_id == current_user.id)
         .first()
     )
     if not booked:
@@ -281,13 +283,12 @@ async def make_payment(
             content={"message": "Booking not Found"}, status_code=400
         )
 
-
     # send user payment to paystack API
     url = "https://api.paystack.co/transaction/initialize"
     headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}  # type: ignore
     post_data = {
         "email": current_user.email,
-        "amount": int(booked.price), #type: ignore
+        "amount": int(booked.price) * 100,  # type: ignore
         "currency": "NGN",
     }
     resp = requests.post(url=url, headers=headers, json=post_data)
@@ -305,7 +306,7 @@ async def verify_user_booking_payment(
     request: Request,
     data: BookingVerifyTransaction,
     db: DB = Depends(get_db),
-    current_user = Depends(PermissionDependency(Role.USER, User))
+    current_user=Depends(PermissionDependency(Role.USER, User)),
 ):
     book_id = decode_id(data.booking_id)
 
@@ -323,42 +324,92 @@ async def verify_user_booking_payment(
     )
 
     url = f"https://api.paystack.co/transaction/verify/{data.reference}"
-    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}# type: ignore
+    headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}  # type: ignore
 
     resp = requests.get(url=url, headers=headers)
     try:
         response = resp.json()
-        print(response)
         if response["data"]["status"] != "success":
-            return JSONResponse(content="Unsuccessful transaction", status_code=400)
+            return JSONResponse(
+                content="Unsuccessful transaction", status_code=400
+            )
     except (requests.RequestException, requests.ReadTimeout) as e:
         return JSONResponse(f"Network error: {e}", status_code=500)
 
     if not booking:
-        return JSONResponse(status_code =404, content={"message": "Booking for user not found"})
-    booking.status = BookingStatus.CONFIRMED #type: ignore
+        return JSONResponse(
+            status_code=404, content={"message": "Booking for user not found"}
+        )
+    booking.status = BookingStatus.CONFIRMED  # type: ignore
     db._session.commit()
 
-    # generate user ticket
-
-    ticket = Ticket(
-        ticket_number=unique_string(50),
+    # generate user token key
+    totp = pyotp.TOTP("base32secret3232")
+    token = Tokens(
+        otp_code=int(totp.now()),
         booking_id=booking.id,
         user_id=current_user.id,
         theatre_id=booking.show_time.screen.theatre.id,
-        movie_id=booking.show_time.movies.id,
-        expires_at=booking.show_time.expires_at,
-        screen_id=booking.show_time.screen.id,
+        expires_at=booking.show_time.expires_at + timedelta(hours=30),
     )
-    ticket.seats.append(booking.seats)
+    db._session.add(token)
     db._session.commit()
-    db._session.refresh(ticket)
-    ticket_info = {
-        "viewer": f"{booking.user.first_name} {booking.user.last_name}",
-        "theatre_name": booking.show_time.screen.theatre.name,
-        "screen": booking.show_time.screen.screen_name,
-        "booking_status": booking.status.value,
-        "movie": booking.show_time.movies.title,
-        "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats]
+    db._session.refresh(token)
+    token_dict = {
+        "otp_code": token.otp_code,
+        "expirest_at": token.expires_at.strftime("%Y-%m-%dT%H:%M:%S"),
     }
-    return JSONResponse(status_code=200, content=ticket_info)
+    return JSONResponse(status_code=200, content=token_dict)
+
+
+
+@router.post("/verify-booking", tags=["Theare Verify Booking"])
+@login_required(Theatre)
+async def verify_uuser_provided_token(
+    request: Request,
+    data: VerifyOtpToken,
+    db: DB = Depends(get_db),
+    thea=Depends(PermissionDependency(Role.THEATRE, Theatre)),
+):
+    token = db._session.query(Tokens).filter(Tokens.otp_code == data.code, Tokens.theatre_id == thea.id).first()
+
+    # booked = db._session.query(Booking).
+    if not token:
+        return JSONResponse(content={"message": "Invalid token provided"}, status_code=400)
+    booking = (
+        db._session.query(Booking)
+        .filter(Booking.id == token.booking_id)
+        .options(
+            joinedload(Booking.show_time)
+            .joinedload(ShowTime.screen)
+            .joinedload(Screen.theatre),
+            joinedload(Booking.show_time).joinedload(ShowTime.movies),
+            # joinedload(Booking.seats).joinedload(BookingSeat.seat),
+        )
+        .first()
+    )
+
+    if not booking:
+        return JSONResponse(content={"Vmessage": "Invalid token provided"}, status_code=400)
+
+
+    if token.expires_at < datetime.now(): #type: ignore
+        booking.status = BookingStatus.CANCELED #type: ignore
+        for seat in booking.seats:
+            seat.is_available=True
+            db._session.commit()
+        return JSONResponse(content={"message": "Token expired"}, status_code=400)
+
+    for seat in booking.seats:
+        seat.is_available = True
+        db._session.commit()
+    booking_info = {
+        "viewer": token.user.get_name,
+        "theatre_name": booking.show_time.screen.theatre.name,
+        "movie_title": booking.show_time.movies.title,
+        "screen_name": booking.show_time.screen.screen_name,
+        "seats": [f"{seat.row}{seat.seat_number}" for seat in booking.seats],
+        "booking_status": booking.status.value,
+        "expires_at": token.expires_at.strftime("%Y-%m-%dT:%H:%M:%S")
+    }
+    return JSONResponse(content=booking_info, status_code=200)

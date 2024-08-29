@@ -33,7 +33,6 @@ class Auth:
         self, klass, background_tasks: BackgroundTasks, **kwargs
     ):
         from .email import send_account_verification_email
-
         """
         register user account details
         """
@@ -58,11 +57,14 @@ class Auth:
         del kwargs["check_against"]
         kwargs["password"] = hash_password(kwargs["password"])
         kwargs["updated_at"] = func.now()
+        kwargs["is_verified"] = True
         obj = self._db.add(klass, **kwargs)
         context = USER_VERIFICATION_ACCOUNT
-        background_tasks.add_task(
-            send_account_verification_email, obj, background_tasks, context
-        )
+
+        #FIXME implement SMTP server
+        # background_tasks.add_task(
+        #     send_account_verification_email, obj, background_tasks, context
+        # )
         return self._generate_token(obj, "user"), obj
 
     async def token_verification(
