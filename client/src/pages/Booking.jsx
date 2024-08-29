@@ -32,29 +32,33 @@ function Booking() {
 
   async function selectSeat(seatId) {
     try {
+      const accessToken = JSON.parse(sessionStorage.getItem("accessToken"));
+
       const res = await fetch(
         `https://homely-mia-hng-c4ac2199.koyeb.app/booking`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${JSON.parse(
-              sessionStorage.getItem("accessToken")
-            )}`,
+            Authorization: `Bearer ${accessToken}`,
           },
 
           body: JSON.stringify({
+            showtime_id: screens.at(0).showtimes.at(0).showtime_id,
             seats: [
               {
-                seat_id: seatId,
+                seat_id: String(seatId),
               },
             ],
           }),
         }
       );
+
+      console.log(screens.at(0).showtimes.at(0).showtime_id, seatId);
       const data = await res.json();
 
       if (!data) throw new Error("There error connecting");
+
+      console.log(data);
     } catch (error) {
       console.log(error.message);
     }
