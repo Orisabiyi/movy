@@ -28,6 +28,7 @@ ACCESS_TOKEN = os.getenv("TMDB_ACCESS_READ_TOKEN")
 def _get_url_response(url: str, headers: Dict, params: Dict) -> Dict:
     resp = requests.get(url, headers=headers, params=params)
     assert resp.status_code == 200, f"{resp.text}, {resp.status_code}"
+    print("---------------------------")
     return resp.json()
 
 
@@ -61,6 +62,7 @@ class TMDB:
         for i in range(1, 12):
             url = f"{self._url}movie/popular?language=en-US&page={i}"
             resp = _get_url_response(url, self._headers, self.param)
+            print("--------------------------------------->")
             movies = resp["results"]
             for movie in movies:
                 trailer_link = self.get_trailer_link(movie["id"])
@@ -123,7 +125,7 @@ class TMDB:
     def movie_cast(self):
         movie_id_lst = self.movie_id_lst
         cast = None
-        MAX_VAL = 15
+        MAX_VAL = 8
         for movie_id in movie_id_lst:
             url = f"{self._url}movie/{movie_id[0]}/credits?language=en-US"
             resp = _get_url_response(url, self._headers, self.param)
@@ -146,7 +148,6 @@ class TMDB:
                 movie_obj = db.get(Movie, id=movie_id[1])
                 if cast:
                     cast.casts_movie.append(movie_obj)
-
                 if count == MAX_VAL:
                     break
                 count += 1
