@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import DotLoader from "react-spinners/DotLoader";
 
 function Booking() {
   const { id, screen } = useParams();
+  const navigate = useNavigate("");
   const [{ theatre_name: theatreName, screens }, setCurTheatre] = useState("");
   const [bookingId, setBookingId] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -83,11 +85,15 @@ function Booking() {
         }
       );
 
-      console.log(screens.at(0).showtimes.at(0).showtime_id, seatId);
+      console.log(res);
+      if (!res.ok) throw new Error("There is error");
+
       const data = await res.json();
       if (!data) throw new Error("There error connecting");
 
       setBookingId(data.booking_id);
+
+      navigate(`/${id}/${screen}/${bookingId}`);
     } catch (error) {
       console.log(error.message);
     } finally {
@@ -96,7 +102,7 @@ function Booking() {
   }
 
   return (
-    <main>
+    <main className="relative">
       <section className="flex flex-col items-center justify-center gap-[4rem] min-h-screen px-[6rem] py-[3rem]">
         <div
           className="h-[20rem] w-full flex flex-col items-center justify-center text-[3rem] text-white font-semibold"
@@ -125,6 +131,11 @@ function Booking() {
             )}
         </ul>
       </section>
+      {isLoading && (
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-25 backdrop-blur">
+          <DotLoader color="#c2410c" height={90} width={15} />
+        </div>
+      )}
     </main>
   );
 }

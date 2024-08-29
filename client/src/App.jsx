@@ -8,6 +8,7 @@ import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Booking from "./pages/Booking";
 import ProtectRoute from "./components/ProtectRoute";
+import Payment from "./pages/Payment";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             </ProtectRoute>
           }
         />
+        <Route path="/:id/:screen/:bookingId" element={<Payment />} />
       </Routes>
     </BrowserRouter>
   );
