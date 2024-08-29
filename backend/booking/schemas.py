@@ -16,18 +16,17 @@ class BookingRequest(BaseModel):
     showtime_id: str
     seats: List[BookingSeat]
 
-    class Config:
-        json_extra_schema = {
-            "example": {
-                "user_id": 123,
-                "showtime_id": 456,
-                "seats": [
-                    {"seat_id": 1},
-                    {"seat_id": 2},
-                    {"seat_id": 3},
-                ],
-            }
-        }
+    # class Config:
+    #     json_extra_schema = {
+    #         "example": {
+    #             "showtime_id": 456,
+    #             "seats": [
+    #                 {"seat_id": 1},
+    #                 {"seat_id": 2},
+    #                 {"seat_id": 3},
+    #             ],
+    #         }
+    #     }
 
 
 class UserBookingResponse(BaseModel):
