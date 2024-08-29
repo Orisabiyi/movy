@@ -32,15 +32,18 @@ class Auth:
     async def register_user(
         self, klass, background_tasks: BackgroundTasks, **kwargs
     ):
-        from .email import send_account_verification_email
+        print("ewwwww")
+        # from .email import send_account_verification_email
         """
         register user account details
         """
+        print("ewwwww, ------->")
         user = None
         obj = None
         try:
             user = self._db.get(klass, email=kwargs["email"])
             if user:
+                print(obj)
                 raise ValueError("Email already exists")
         except NoResultFound:
             pass
@@ -50,6 +53,7 @@ class Auth:
                 Model[kwargs["check_against"]], email=kwargs["email"]
             )
             if obj:
+                print(obj)
                 raise ValueError("Email already exists")
         except NoResultFound:
             ...
@@ -61,6 +65,7 @@ class Auth:
         obj = self._db.add(klass, **kwargs)
         context = USER_VERIFICATION_ACCOUNT
 
+        print(obj)
         #FIXME implement SMTP server
         # background_tasks.add_task(
         #     send_account_verification_email, obj, background_tasks, context
