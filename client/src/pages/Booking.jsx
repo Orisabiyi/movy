@@ -91,7 +91,6 @@ function Booking() {
       const data = await res.json();
       if (!data || !data.booking_id) throw new Error("There error connecting");
 
-      console.log(data.booking_id);
       setBookingId(data.booking_id);
       navigate(`/${id}/${screen}/${bookingId}`);
     } catch (error) {
