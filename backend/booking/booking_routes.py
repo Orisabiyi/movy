@@ -40,6 +40,7 @@ async def book_movie(
     """
     create user booking
     """
+    print("---------------------> hwere ")
     show_time = (
         db._session.query(ShowTime)
         .filter(ShowTime.id == decode_id(data.showtime_id))
