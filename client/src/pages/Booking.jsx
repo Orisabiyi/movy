@@ -30,11 +30,49 @@ function Booking() {
     [id, screen]
   );
 
+  async function selectSeat(seatId) {
+    try {
+      const res = await fetch(
+        `https://homely-mia-hng-c4ac2199.koyeb.app/booking`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${JSON.parse(
+              sessionStorage.getItem("accessToken")
+            )}`,
+          },
+
+          body: JSON.stringify({
+            seats: [
+              {
+                seat_id: seatId,
+              },
+            ],
+          }),
+        }
+      );
+      const data = await res.json();
+
+      if (!data) throw new Error("There error connecting");
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   return (
     <main>
-      <section className="flex flex-col items-center justify-center gap-[2rem] h-screen px-[6rem] py-[3rem]">
-        <div className="h-[20%] w-full flex flex-col items-center justify-center">
-          {theatreName}
+      <section className="flex flex-col items-center justify-center gap-[4rem] min-h-screen px-[6rem] py-[3rem]">
+        <div
+          className="h-[20rem] w-full flex flex-col items-center justify-center text-[3rem] text-white font-semibold"
+          style={{
+            background: "url(/public/red-curtain.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "top",
+          }}
+        >
+          <span>{theatreName}</span>
+          <span>Theatre</span>
         </div>
         <ul className="flex-1 grid grid-cols-10 gap-8 w-full">
           {screens &&
@@ -42,7 +80,8 @@ function Booking() {
               ({ seat_number: seatNumber, seat_id: seatId, row }) => (
                 <li
                   key={seatId}
-                  className="flex flex-col items-center justify-center bg-orange-400 rounded-tr-[1.5rem] rounded-tl-[1.5rem] leading-6 text-[1.3rem]"
+                  className="flex flex-col items-center justify-center bg-orange-400 rounded-tr-[1.5rem] rounded-tl-[1.5rem] leading-6 text-[1.3rem] px-[1rem] py-[1.5rem] cursor-pointer hover:bg-white hover:border-[1px] hover:transition-all hover:border-orange-500"
+                  onClick={() => selectSeat(seatId)}
                 >
                   <span>{`Seat ${seatNumber}`}</span>
                   <span>{`Row ${row}`}</span>
