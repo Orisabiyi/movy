@@ -35,9 +35,12 @@ function Signin() {
 
       if (!data.access_token)
         throw new Error("There is an error connecting to the server");
-      
+
       if (!data.refresh_token)
         throw new Error("There is an error connecting to the server");
+
+      sessionStorage.clear();
+      localStorage.clear();
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));

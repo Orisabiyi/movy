@@ -29,13 +29,38 @@ function Booking() {
     },
     [id, screen]
   );
+  async function refreshToken() {
+    try {
+      const refreshToken = JSON.parse(localStorage.getItem("refreshToken"));
+
+      const res = await fetch(
+        "https://homely-mia-hng-c4ac2199.koyeb.app/auth/user/refresh",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(`Failed to refresh token: ${data.message}`);
+
+      sessionStorage.setItem("accessToken", JSON.stringify(data.accessToken));
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
 
   async function selectSeat(seatId) {
     try {
+      await refreshToken();
       const accessToken = JSON.parse(sessionStorage.getItem("accessToken"));
 
       const res = await fetch(
-        `https://homely-mia-hng-c4ac2199.koyeb.app/booking`,
+        `https://homely-mia-hng-c4ac2199.koyeb.app/booking/`,
         {
           method: "POST",
           headers: {
@@ -43,7 +68,7 @@ function Booking() {
           },
 
           body: JSON.stringify({
-            showtime_id: screens.at(0).showtimes.at(0).showtime_id,
+            showtime_id: String(screens.at(0).showtimes.at(0).showtime_id),
             seats: [
               {
                 seat_id: String(seatId),
