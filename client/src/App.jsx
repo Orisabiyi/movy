@@ -7,6 +7,7 @@ import Theater from "./pages/Theater";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 import Booking from "./pages/Booking";
+import ProtectRoute from "./components/ProtectRoute";
 
 function App() {
   return (
@@ -18,7 +19,14 @@ function App() {
           <Route path="/:id/:theater/:screen/signup" element={<Signup />} />
           <Route path="/:id/:theater/:screen/signin" element={<Signin />} />
         </Route>
-        <Route path="/:id/:screen/booking" element={<Booking />} />
+        <Route
+          path="/:id/:screen/booking"
+          element={
+            <ProtectRoute>
+              <Booking />
+            </ProtectRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
