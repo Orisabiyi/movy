@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Audio } from "react-loader-spinner";
+import { ClipLoader } from "react-spinners";
 
 export default function Carousel() {
   const [movies, setMovies] = useState([]);
@@ -36,7 +36,7 @@ export default function Carousel() {
             </figure>
           ))
         ) : (
-          <Audio height="80" width="80" color="blue" ariaLabel="loading" />
+          <ClipLoader color="#c2410c" height={90} width={15} />
         )}
       </div>
     </>
