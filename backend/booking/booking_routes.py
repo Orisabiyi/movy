@@ -52,7 +52,6 @@ async def book_movie(
         )
 
     seat_ids = [decode_id(seat.seat_id) for seat in data.seats]
-
     price = 0
     for seat in seat_ids:
         price += show_time.price
@@ -62,6 +61,7 @@ async def book_movie(
         .all()
     )
     if len(seat_available) != len(seat_ids):
+        print(len(seat_available))
         return JSONResponse(
             status_code=400,
             content={"messge": "the chosen seats are already reserved"},

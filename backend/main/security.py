@@ -64,9 +64,7 @@ def generate_token_payload(
 
 
 async def get_current_user_or_theatre(token: str, secret_key, klass):
-    print(token)
     payload = get_token_payload(token, secret_key)
-    print(payload)
     if payload:
         user = await load_user(klass, id=str_decode(payload.get("sub")))  # type: ignore
         if user and user.id == str_decode(payload.get("sub")):
