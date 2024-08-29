@@ -70,7 +70,8 @@ async def signup(
         tokens, obj = await AUTH.register_user(
             User, background_tasks, **u_data
         )
-    except ValueError:
+    except ValueError as e:
+        print(e)
         message = {"message": "Email already exists"}
         return JSONResponse(
             content=message, status_code=status.HTTP_400_BAD_REQUEST
