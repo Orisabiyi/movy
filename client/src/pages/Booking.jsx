@@ -5,6 +5,7 @@ function Booking() {
   const { id, screen } = useParams();
   const [{ theatre_name: theatreName, screens }, setCurTheatre] = useState("");
   const [bookingId, setBookingId] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(
     function () {
@@ -59,9 +60,9 @@ function Booking() {
 
   async function selectSeat(seatId) {
     try {
-      // await refreshToken();
-      const accessToken = JSON.parse(sessionStorage.getItem("accessToken"));
+      setIsLoading(true);
 
+      const accessToken = JSON.parse(sessionStorage.getItem("accessToken"));
       const res = await fetch(
         `https://homely-mia-hng-c4ac2199.koyeb.app/booking/`,
         {
@@ -89,6 +90,8 @@ function Booking() {
       setBookingId(data.booking_id);
     } catch (error) {
       console.log(error.message);
+    } finally {
+      setIsLoading(false);
     }
   }
 
