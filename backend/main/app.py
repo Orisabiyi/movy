@@ -33,8 +33,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["POST", "GET", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET) #type: ignore
@@ -142,7 +142,7 @@ async def custom_validation_exception_handler(
     # Customize the format here
     custom_errors = [
         {
-            "field": error["loc"][1],
+            "field": error["loc"],
             "message": error["msg"],
             "error_type": error["type"],
         }
