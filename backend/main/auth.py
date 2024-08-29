@@ -43,7 +43,7 @@ class Auth:
         try:
             user = self._db.get(klass, email=kwargs["email"])
             if user:
-                print(obj)
+                print(user)
                 raise ValueError("Email already exists")
         except NoResultFound:
             pass
