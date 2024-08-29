@@ -32,10 +32,12 @@ class Auth:
     async def register_user(
         self, klass, background_tasks: BackgroundTasks, **kwargs
     ):
+        print("ewwwww")
         # from .email import send_account_verification_email
         """
         register user account details
         """
+        print("ewwwww, ------->")
         user = None
         obj = None
         try:
