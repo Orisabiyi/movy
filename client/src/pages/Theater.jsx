@@ -5,7 +5,7 @@ import DotLoader from "react-spinners/DotLoader";
 function Theater() {
   const [theatres, setTheatres] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { id } = useParams();
+  const { id, screen } = useParams();
 
   useEffect(
     function () {
@@ -84,7 +84,12 @@ function Theater() {
                       <Link
                         key={screenName}
                         className="flex flex-col gap-[.3rem] leading-5 px-[3rem] py-[1rem] font-semibold rounded-[50rem] border-orange-700 border-b-[2px] text-[1.3rem] hover:bg-orange-700 hover:text-white"
-                        to={`${theatreName}/signup`}
+                        to={
+                          sessionStorage.getItem("accessToken") &&
+                          sessionStorage.getItem("refreshToken")
+                            ? `/${id}/${screen}/booking`
+                            : `${theatreName}/signup`
+                        }
                       >
                         <span>Screen name: {screenName}</span>
                         <span>Seats Left: {seatRemaining}</span>
