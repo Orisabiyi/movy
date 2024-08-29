@@ -28,7 +28,7 @@ app = FastAPI(
 )
 
 # middleware setup
-origins = ["*"]
+origins = ["http://localhost:5173", "https://movy-sigma.vercel.app"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
