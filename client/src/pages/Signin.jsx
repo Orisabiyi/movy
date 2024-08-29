@@ -32,6 +32,10 @@ function Signin() {
       const data = text ? JSON.parse(text) : {};
 
       if (!data) throw new Error("There was an error connecting");
+      if (!data.access_token)
+        throw new Error("There is an error connecting to the server");
+      if (!data.refresh_token)
+        throw new Error("There is an error connecting to the server");
 
       sessionStorage.setItem("accessToken", JSON.stringify(data.access_token));
       localStorage.setItem("refreshToken", JSON.stringify(data.refresh_token));
